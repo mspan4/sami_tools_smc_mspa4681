@@ -10,8 +10,8 @@ import scipy.ndimage.filters as filters
 from scipy.special import legendre
 import glob
 import astropy.io.fits as pf
-import sami_dr_smc.sami_stats_utils as sami_stats_utils
-import sami.dr.fluxcal2 as fluxcal2
+import sami_tools_smc_mspa4681.dr_tools.sami_stats_utils as sami_stats_utils
+# import sami.dr.fluxcal2 as fluxcal2
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
@@ -31,12 +31,12 @@ from os import mkdir
 from astroquery.sdss import SDSS
 from astropy import wcs
 
-from sami_dr_smc.sami_utils import spectres
-from sami_dr_smc.sami_stats_utils import polyfitr, median_filter_nan
-from sami_dr_smc.sami_fit_secondary_fluxcal import read_flux_calibration_extension
+from sami_tools_smc_mspa4681.dr_tools.sami_utils import spectres
+from sami_tools_smc_mspa4681.dr_tools.sami_stats_utils import polyfitr, median_filter_nan
+from sami_tools_smc_mspa4681.dr_tools.sami_fit_secondary_fluxcal import read_flux_calibration_extension
 
-from sami.manager import read_stellar_mags
-import sami.dr.fluxcal2 as fluxcal2
+#from sami.manager import read_stellar_mags
+#import sami.dr.fluxcal2 as fluxcal2
 
 
 # Circular patch.
@@ -44,7 +44,7 @@ from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 
 # SAMI package dust correction:
-from sami.dr.dust import  MilkyWayDustCorrection
+#from sami.dr.dust import  MilkyWayDustCorrection
 
 ###############################################################################
 # function to correct Kurucz model spectra based on the SDSS empirical

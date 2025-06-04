@@ -13,14 +13,14 @@ from scipy import ndimage
 import numpy as np
 import scipy.ndimage as nd
 
-import ppxf as ppxf_package
-from ppxf.ppxf import ppxf
-import ppxf.ppxf_util as util
+#import ppxf as ppxf_package
+#from ppxf.ppxf import ppxf
+#import ppxf.ppxf_util as util
 
 #import healpy as hp
 # dependency on main SAMI DR package.
-from sami.dr.fluxcal2 import fit_spline
-import sami.dr.dust as dust
+#from sami_tools_smc_mspa4681.dr_tools.fluxcal2 import fit_spline
+#import sami.dr.dust as dust
 
 # local imports
 from .sami_utils import spectres

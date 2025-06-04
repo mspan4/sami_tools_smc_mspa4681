@@ -14,8 +14,8 @@ from datetime import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from sami_tools_smc.dr_tools.sami_fluxcal import sami_read_apspec
-from sami_dr_smc.sami_utils import spectres
+from sami_tools_smc_mspa4681.dr_tools.sami_fluxcal import sami_read_apspec
+from sami_tools_smc_mspa4681.dr_tools.sami_utils import spectres
 
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
