@@ -181,11 +181,13 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # download SDSS RGB:
     impix = 3 * 50
     imsize = 3 * 0.4166*u.arcmin
-    cutoutbaseurl = 'http://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
+    cutoutbaseurl = 'https://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
     query_string = urlencode(dict(ra=ra,dec=dec, 
                                      width=impix, height=impix, 
                                      scale=imsize.to(u.arcsec).value/impix))
     url = cutoutbaseurl + '?' + query_string
+    
+    print(url)
     # this downloads the image to your disk
     urlretrieve(url, 'SDSS_cutout.jpg')
     image = Image.open('SDSS_cutout.jpg')
@@ -198,7 +200,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     impix = 50
     #imsize = 0.25*u.arcmin
     imsize = 0.4166*u.arcmin
-    cutoutbaseurl = 'http://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
+    cutoutbaseurl = 'https://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
     query_string = urlencode(dict(ra=ra,dec=dec, 
                                      width=impix, height=impix, 
                                      scale=imsize.to(u.arcsec).value/impix))
@@ -296,7 +298,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # NII/Ha
     ax42 = fig1.add_subplot(gs[3,1])
     ax42.set_aspect('equal', 'box')
-    n2flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_NII6583_'+bin+'_1-comp_A.fits')
+    n2flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_NII6583_'+bin+'_1-comp.fits')
     n2flux = fits.getdata(n2flux_file, ext=0)
     n2err =  fits.getdata(n2flux_file, extname='NII6583_ERR')
     n2sn = n2flux/n2err
