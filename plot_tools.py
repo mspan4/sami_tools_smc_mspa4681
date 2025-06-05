@@ -113,7 +113,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
     # set up pdf plotting:
     if (dopdf):
-        pdf = PdfPages(f'dr3_sov_{catid}.pdf')
+        pdf = PdfPages(f'dr3_sov_pdfs/dr3_sov_{catid}.pdf')
 
     # set up grid:
     fig1 = py.figure(1,constrained_layout=True)
@@ -215,7 +215,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     #image.show()
     
     
-    ax22 = fig1.add_subplot(gs[1,1])
+
     ax23 = fig1.add_subplot(gs[1,2])
 
     # velocity fields:
