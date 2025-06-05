@@ -187,7 +187,6 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
                                      scale=imsize.to(u.arcsec).value/impix))
     url = cutoutbaseurl + '?' + query_string
     
-    print(url)
     # this downloads the image to your disk
     urlretrieve(url, 'SDSS_cutout.jpg')
     image = Image.open('SDSS_cutout.jpg')
@@ -319,7 +318,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     o3flux = fits.getdata(o3flux_file, ext=0)
     o3err =  fits.getdata(o3flux_file, extname='OIII5007_ERR')
     o3sn = o3flux/o3err
-    hbflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_HBETA_'+bin+'_1-comp.fits')
+    hbflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Hbeta_'+bin+'_1-comp.fits')
     hbflux = fits.getdata(hbflux_file, ext=0)
     hberr =  fits.getdata(hbflux_file, extname='HBETA_ERR')
     hbsn = hbflux/hberr
