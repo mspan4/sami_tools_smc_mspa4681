@@ -98,7 +98,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
 
 
     # set up formating:
-    py.rc('text', usetex=True)
+    py.rc('text', usetex=False)
     py.rcParams.update({'font.size': 5})
     py.rcParams.update({'lines.linewidth': 1})
     py.rcParams.update({'figure.autolayout': True})
@@ -113,7 +113,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
     # set up pdf plotting:
     if (dopdf):
-        pdf = PdfPages('dr3_sov.pdf')
+        pdf = PdfPages(f'dr3_sov_{catid}.pdf')
 
     # set up grid:
     fig1 = py.figure(1,constrained_layout=True)
@@ -357,10 +357,12 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     fig1.colorbar(im44, cax=axins44, orientation="horizontal")
 
     ax44.set(xlim=[-1.5,0.5],ylim=[-1.2,1.5],xlabel='log([NII]/Ha)',ylabel='log([OIII]/Hb)')
+    
+
 
     if (dopdf):
-        py.savefig(pdf, format='pdf')        
-        pdf.close()
+    	py.savefig(pdf, format='pdf')
+    	pdf.close()
 
     
 ############################################################################
