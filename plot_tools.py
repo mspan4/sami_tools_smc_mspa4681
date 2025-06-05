@@ -28,6 +28,9 @@ import astropy.units as u
 
 from PIL import Image
 
+# Folder location with all SAMI cubes:
+ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
+
 ###############################################################
 def plot_line_lam(ax,z):
 
@@ -121,8 +124,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     ax1 = fig1.add_subplot(gs[0,:])
 
     # read aperture spectrum:
-    apspecfile_blue = os.path.join(str(catid),str(catid)+'_spectrum_3-arcsec_blue_A.fits')
-    apspecfile_red = os.path.join(str(catid),str(catid)+'_spectrum_3-arcsec_red_A.fits')
+    apspecfile_blue = os.path.join(ifs_path, str(catid),str(catid)+'_A_spectrum_3-arcsec_blue.fits')
+    apspecfile_red = os.path.join(ifs_path, str(catid),str(catid)+'_A_spectrum_3-arcsec_red.fits')
 
     hdulist = fits.open(apspecfile_blue)
     sami_flux_blue,sami_lam_blue = sami_read_apspec(hdulist,0,doareacorr=False)
@@ -217,7 +220,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # velocity fields:
     ax31 = fig1.add_subplot(gs[2,0])
     ax31.set_aspect('equal', 'box')
-    stelvel_file = os.path.join(str(catid),str(catid)+'_stellar-velocity_'+bin+'_two-moment_A.fits')
+    stelvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity_'+bin+'_two-moment.fits')
     stelvel = fits.getdata(stelvel_file, ext=0)
     stelflux = fits.getdata(stelvel_file, extname='FLUX')
     vmin = -150.0
@@ -236,7 +239,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # stellar sigma:
     ax32 = fig1.add_subplot(gs[2,1])
     ax32.set_aspect('equal', 'box')
-    stelsig_file = os.path.join(str(catid),str(catid)+'_stellar-velocity-dispersion_'+bin+'_two-moment_A.fits')
+    stelsig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity-dispersion_'+bin+'_two-moment.fits')
     stelsig = fits.getdata(stelsig_file, ext=0)
     vmin = 0.0
     vmax=np.nanpercentile(stelsig,95.0)
@@ -246,7 +249,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     ax32.text(0.05, 0.05,'sig stel', horizontalalignment='left',verticalalignment='center', transform=ax32.transAxes)
 
     # get Halpha early, so we can use it for S/N cuts:
-    haflux_file = os.path.join(str(catid),str(catid)+'_Halpha_'+bin+'_1-comp_A.fits')
+    haflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Halpha_'+bin+'_1-comp.fits')
     haflux = fits.getdata(haflux_file, ext=0)[0,:,:]
     haerr =  fits.getdata(haflux_file, extname='HALPHA_ERR')[0,:,:]
     hasn = haflux/haerr
@@ -255,7 +258,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # gas velocity fields:
     ax33 = fig1.add_subplot(gs[2,2])
     ax33.set_aspect('equal', 'box')
-    gasvel_file = os.path.join(str(catid),str(catid)+'_gas-velocity_'+bin+'_1-comp_A.fits')
+    gasvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-velocity_'+bin+'_1-comp.fits')
     gasvel = fits.getdata(gasvel_file, ext=0)[0,:,:]
     gasvel_masked = np.ma.masked_array(gasvel,(ha_snflag>0))
     vmin = -150.0
@@ -269,7 +272,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # gas velocity dispersion fields:
     ax34 = fig1.add_subplot(gs[2,3])
     ax34.set_aspect('equal', 'box')
-    gassig_file = os.path.join(str(catid),str(catid)+'_gas-vdisp_'+bin+'_1-comp_A.fits')
+    gassig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-vdisp_'+bin+'_1-comp.fits')
     gassig = fits.getdata(gassig_file, ext=0)[0,:,:]
     gassig_masked = np.ma.masked_array(gassig,(ha_snflag>0))
     vmin = 0.0
@@ -293,7 +296,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # NII/Ha
     ax42 = fig1.add_subplot(gs[3,1])
     ax42.set_aspect('equal', 'box')
-    n2flux_file = os.path.join(str(catid),str(catid)+'_NII6583_'+bin+'_1-comp_A.fits')
+    n2flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_NII6583_'+bin+'_1-comp_A.fits')
     n2flux = fits.getdata(n2flux_file, ext=0)
     n2err =  fits.getdata(n2flux_file, extname='NII6583_ERR')
     n2sn = n2flux/n2err
@@ -310,11 +313,11 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
     # get Hbeta and OIII:
     ax43 = fig1.add_subplot(gs[3,2])
     ax43.set_aspect('equal', 'box')
-    o3flux_file = os.path.join(str(catid),str(catid)+'_OIII5007_'+bin+'_1-comp_A.fits')
+    o3flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_OIII5007_'+bin+'_1-comp.fits')
     o3flux = fits.getdata(o3flux_file, ext=0)
     o3err =  fits.getdata(o3flux_file, extname='OIII5007_ERR')
     o3sn = o3flux/o3err
-    hbflux_file = os.path.join(str(catid),str(catid)+'_HBETA_'+bin+'_1-comp_A.fits')
+    hbflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_HBETA_'+bin+'_1-comp.fits')
     hbflux = fits.getdata(hbflux_file, ext=0)
     hberr =  fits.getdata(hbflux_file, extname='HBETA_ERR')
     hbsn = hbflux/hberr
