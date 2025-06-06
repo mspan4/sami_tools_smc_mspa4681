@@ -35,9 +35,15 @@ ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
 import plot_tools
 
-plot_tools.plot_dr3_sov(6821)
+catid = 9011900430 # highest flux radio source
+plot_tools.plot_dr3_sov(catid, isradio=True)
 
 #url =     'http://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx?ra=174.1531666666667&dec=0.815861111111111&width=150&height=150&scale=0.49992'
 #url = url.replace("http://", "https://")
 #urlretrieve(url, 'SDSS_cutout.jpg')
+
+#cutout_file = "/suphys/mspa4681/.astropy/cache/astroquery/Casda/cutout-936737-imagecube-71340.fits"
+#image = fits.open(cutout_file)[0].data.squeeze()
+#py.contour(np.fliplr(image), cmap='magma')
+#py.show()
 

@@ -28,6 +28,12 @@ import astropy.units as u
 
 from PIL import Image
 
+from astroquery.casda import Casda  
+from astroquery.utils.tap.core import TapPlus
+
+# CASDA OPAL username to access RACS data:
+OPAL_USER = "mspa4681@uni.sydney.edu.au"
+
 # Folder location with all SAMI cubes:
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
@@ -91,11 +97,15 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
+def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False):
 
     """Make a summary plot of all the main data from DR3, much like a single
     object viewer.  Assumes the format of DR3."""
-
+    
+    # get casda credentials if needed (only if isradio)
+    if isradio:
+        casda=Casda()
+        casda.login(username=OPAL_USER, store_password=False)
 
     # set up formating:
     py.rc('text', usetex=False)
@@ -214,6 +224,46 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None):
 
     #image.show()
     
+    # plot radio contours on SDSS images if isradio
+    if isradio:
+        # download RACS Radio image cutout:
+        impix = 3 * 50
+        imsize = 3 * 0.4166*u.arcmin
+        
+        # get args
+        centre = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+        
+        
+        query = "select * from ivoa.obscore "\
+            "where filename LIKE 'RACS-DR1%' "\
+            "AND filename LIKE '%A.fits' "\
+            f"AND 1 = CONTAINS(POINT('ICRS',{ra},{dec}),s_region)"
+        # open connection to TAP service and run query
+        casdatap = TapPlus(url="https://casda.csiro.au/casda_vo_tools/tap")
+        job = casdatap.launch_job_async(query)
+        table = job.get_results()
+        
+        # request a cutout of the images returned by the query and download
+        url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
+        
+        cutout_file = casda.download_files(url_list[:2])[0].removesuffix('.checksum')
+
+        image = fits.open(cutout_file)[0].data.squeeze()
+        
+        ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        
+        
+        # again for same size as SAMI IFU:
+        impix = 65
+        #imsize = 0.25*u.arcmin
+        imsize = 0.4166*u.arcmin
+        url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
+        
+        cutout_file = casda.download_files(url_list[:2])[0].removesuffix('.checksum')
+
+        image = fits.open(cutout_file)[0].data.squeeze()
+        
+        ax22.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
     
 
     ax23 = fig1.add_subplot(gs[1,2])
