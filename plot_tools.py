@@ -62,7 +62,7 @@ def plot_sov_many(catfile,bin='default'):
     xrayflux = tab['XRAY_ML_FLUX_0']
 
     
-    pdf = PdfPages('sov_many.pdf')
+    pdf = PdfPages('dr3_sov_pdfs/sov_many.pdf')
 
     n = 0
     for catid in catids:
@@ -303,26 +303,30 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         
         # request a cutout of the images returned by the query and download
         url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
-        print(url_list)
-        cutout_file = casda.download_files(url_list[:2])[0].removesuffix('.checksum')
-        print(cutout_file)
+
+        #only care about the first url but will have to remove the .checksum
+        url_relevant = url_list[0].removesuffix('.checksum')
+        cutout_file = casda.download_files([url_relevant])[0]
+
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
-        
-        
+
+
         # again for same size as SAMI IFU:
         impix = 65
         #imsize = 0.25*u.arcmin
         imsize = 0.4166*u.arcmin
         url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
         
-        cutout_file = casda.download_files(url_list[:2])[0].removesuffix('.checksum')
+        #only care about the first url but will have to remove the .checksum
+        url_relevant = url_list[0].removesuffix('.checksum')
+        cutout_file = casda.download_files([url_relevant])[0]
 
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax22.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
-    
+
 
     ax23 = fig1.add_subplot(gs[1,2])
 
