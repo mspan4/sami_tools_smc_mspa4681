@@ -174,11 +174,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     py.rcParams.update({'lines.linewidth': 1})
     py.rcParams.update({'figure.autolayout': True})
     # this to get sans-serif latex maths:
-    py.rcParams['text.latex.preamble'] = [
-       r'\usepackage{helvet}',    # set the normal font here
-       r'\usepackage{sansmath}',  # load up the sansmath so that math -> helvet
-       r'\sansmath'               # <- tricky! -- gotta actually tell tex to use!
-        ]   
+    py.rcParams['text.latex.preamble'] = r'\usepackage{helvet} \usepackage{sansmath} \sansmath'               # <- tricky! -- gotta actually tell tex to use!
+  
 
 
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
