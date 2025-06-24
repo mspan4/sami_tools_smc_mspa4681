@@ -461,6 +461,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     # plot Kauffmann line:
     k03_bpt_line(colour='r',line=':')
     k01_bpt_line(colour='g',line=':')
+    k03_bpt_Seyfert_LINER_line(colour='grey', line=':')
     axins44 = inset_axes(ax44,width="90%",height="5%",loc='upper center')
     fig1.colorbar(im44, cax=axins44, orientation="horizontal")
 
@@ -486,4 +487,11 @@ def k01_bpt_line(colour='r',line=':'):
         xbpt = np.arange(-2.0,0.3,0.01)
         ybpt = 0.61/(xbpt-0.47) + 1.19
         py.plot(xbpt,ybpt,color=colour,linestyle=line)
+        
+###########################################################################
+# plot Kauffmann Seyfert/LINER seperation line:      
+def k03_bpt_Seyfert_LINER_line(colour='r', line =':'):
+        xbpt = np.arange(-0.45, 0.5, 0.01)
+        ybpt = np.tan(65 *np.pi/180) * (xbpt+0.45) - 0.5
+        py.plot(xbpt, ybpt, color=colour, linestyle=line)
 
