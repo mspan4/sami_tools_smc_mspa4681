@@ -97,12 +97,12 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile,bin='default', isradio=True):
+def plot_sov_many_new(catfile,bin='default', radio_sources=True):
 
     """Plot many SOV plots, reading list from the Matched AGN FITS file"""
 
     # get casda credentials if needed (only if isradio)
-    if isradio:
+    if radio_sources:
         casda=Casda()
         casda.login(username=OPAL_USER, store_password=False)
         
@@ -111,33 +111,50 @@ def plot_sov_many_new(catfile,bin='default', isradio=True):
     
     tab = hdulist[1].data
     
+    if radio_sources:
+        isradio_ls = tab['IS_RADIOSOURCE']==1
+        tab = tab[isradio_ls]
+    
+    
     tab = tab[np.isin(tab['CATID'], (9011900430, 9388000001))] # just now for testing so not rendering
+
     catids = tab['CATID']
     print(catids)
-    #mstar = tab['Mstar']
-    #redshift = tab['z_tonry']
-    #xrayflux = tab['XRAY_ML_FLUX_0']
+    mstar = tab['M_STAR']
+    redshift = tab['Z_SPEC']
+    bpt_classification = tab['CATEGORY_BPT_AGN']
+    xrayflux = tab['eROSITA_TOTALFLUX_1'] # from eROSITA
+    radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
     isradio_ls = tab['IS_RADIOSOURCE']
-    isxray_ls = tab['IS_XRAYSOURCE']
 
-    
-    pdf = PdfPages('sov_many.pdf')
+    pdf = PdfPages('dr3_sov_pdfs/sov_many.pdf')
 
     n = 0
     for catid in catids:
 
-        #dl = cosmo.luminosity_distance(redshift[n])
-        #dlcm = dl.to(u.cm)
-        #lum = xrayflux[n]*(dlcm/u.cm)**2
-        #print(dl,dlcm,lum)
-        
+        dl = cosmo.luminosity_distance(redshift[n])
+        dlcm = dl.to(u.cm)
+        lum = xrayflux[n]*(dlcm/u.cm)**2
+        print(dl,dlcm,lum)
+                #define label:
+        label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(0.2-2.3kev)={2:6.2e} erg/s, BPT classification - {3}'.format(mstar[n],redshift[n],lum, bpt_classification[n])
+
+
+        if radio_sources:
+            # Convert to Luminosity, Sectiion 3.2 of Pracy et al. 2016, in W/Hz
+            alpha_spectral_index = -0.7
+            lum =  radioflux[n] / (u.erg/u.s/(u.cm**2)/u.Hz) * 4 * np.pi * ( (dl.to(u.cm)/u.cm) **2) * 1 / ( (1+redshift[n])** (1+alpha_spectral_index) ) 
+            print(lum)
+            
+                    #define label:
+            label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(1367.5 MHz)={2:6.2e} erg/s /Hz, BPT classification - {3}'.format(mstar[n],redshift[n],lum.decompose(), bpt_classification[n])
+
+
 
         
-        # define label:
-        #label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(0.2-6kev)={2:6.2e} erg/s'.format(mstar[n],redshift[n],lum)
-        label = 'test'
 
-        #print(label)
+
+        print(label)
         
         usebin=bin
         # fix adaptive bining for this object:
