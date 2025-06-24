@@ -97,13 +97,74 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False):
+def plot_sov_many_new(catfile,bin='default', isradio=True):
+
+    """Plot many SOV plots, reading list from the Matched AGN FITS file"""
+
+    # get casda credentials if needed (only if isradio)
+    if isradio:
+        casda=Casda()
+        casda.login(username=OPAL_USER, store_password=False)
+        
+        
+    hdulist = fits.open(catfile)
+    
+    tab = hdulist[1].data
+    
+    tab = tab[np.isin(tab['CATID'], (9011900430, 9388000001))] # just now for testing so not rendering
+    catids = tab['CATID']
+    print(catids)
+    #mstar = tab['Mstar']
+    #redshift = tab['z_tonry']
+    #xrayflux = tab['XRAY_ML_FLUX_0']
+    isradio_ls = tab['IS_RADIOSOURCE']
+    isxray_ls = tab['IS_XRAYSOURCE']
+
+    
+    pdf = PdfPages('sov_many.pdf')
+
+    n = 0
+    for catid in catids:
+
+        #dl = cosmo.luminosity_distance(redshift[n])
+        #dlcm = dl.to(u.cm)
+        #lum = xrayflux[n]*(dlcm/u.cm)**2
+        #print(dl,dlcm,lum)
+        
+
+        
+        # define label:
+        #label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(0.2-6kev)={2:6.2e} erg/s'.format(mstar[n],redshift[n],lum)
+        label = 'test'
+
+        #print(label)
+        
+        usebin=bin
+        # fix adaptive bining for this object:
+        if (catid == 203609):
+            usebin = 'default'
+            
+        plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n])
+
+        py.draw()
+        # pause for input if plotting all the spectra:
+        #yn = input('Continue? (y/n):')
+        py.savefig(pdf, format='pdf')
+
+        n=n+1
+        
+    pdf.close()
+     
+
+###############################################################
+
+def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None):
 
     """Make a summary plot of all the main data from DR3, much like a single
     object viewer.  Assumes the format of DR3."""
     
     # get casda credentials if needed (only if isradio)
-    if isradio:
+    if isradio and casda==None:
         casda=Casda()
         casda.login(username=OPAL_USER, store_password=False)
 
@@ -245,9 +306,9 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         
         # request a cutout of the images returned by the query and download
         url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
-        
+        print(url_list)
         cutout_file = casda.download_files(url_list[:2])[0].removesuffix('.checksum')
-
+        print(cutout_file)
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
