@@ -16,6 +16,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from dr_tools.sami_fluxcal import sami_read_apspec
 from dr_tools.sami_utils import spectres
+from racs_cutout_tools import get_racs_image_cutout
 
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
@@ -30,6 +31,8 @@ from PIL import Image
 
 from astroquery.casda import Casda  
 from astroquery.utils.tap.core import TapPlus
+
+
 
 # CASDA OPAL username to access RACS data:
 OPAL_USER = "mspa4681@uni.sydney.edu.au"
@@ -115,8 +118,6 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
         isradio_ls = tab['IS_RADIOSOURCE']==1
         tab = tab[isradio_ls]
     
-    
-    tab = tab[np.isin(tab['CATID'], (9011900430, 9388000001))] # just now for testing so not rendering
 
     catids = tab['CATID']
     print(catids)
@@ -151,9 +152,7 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
 
 
 
-        
-
-
+       
         print(label)
         
         usebin=bin
@@ -305,26 +304,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         impix = 3 * 50
         imsize = 3 * 0.4166*u.arcmin
         
-        # get args
-        centre = SkyCoord(ra, dec, unit=(u.deg, u.deg))
-        
-        
-        query = "select * from ivoa.obscore "\
-            "where filename LIKE 'RACS-DR1%' "\
-            "AND filename LIKE '%A.fits' "\
-            f"AND 1 = CONTAINS(POINT('ICRS',{ra},{dec}),s_region)"
-        # open connection to TAP service and run query
-        casdatap = TapPlus(url="https://casda.csiro.au/casda_vo_tools/tap")
-        job = casdatap.launch_job_async(query)
-        table = job.get_results()
-        
-        # request a cutout of the images returned by the query and download
-        url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
-
-        #only care about the first url but will have to remove the .checksum
-        url_relevant = url_list[0].removesuffix('.checksum')
-        cutout_file = casda.download_files([url_relevant])[0]
-
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
@@ -334,11 +314,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         impix = 65
         #imsize = 0.25*u.arcmin
         imsize = 0.4166*u.arcmin
-        url_list = casda.cutout(table, coordinates=centre, radius=imsize) 
-        
-        #only care about the first url but will have to remove the .checksum
-        url_relevant = url_list[0].removesuffix('.checksum')
-        cutout_file = casda.download_files([url_relevant])[0]
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
 
         image = fits.open(cutout_file)[0].data.squeeze()
         

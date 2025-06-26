@@ -27,7 +27,7 @@ def get_racs_image_cutout(ra, dec, imsize, casda=None, save_dir="racs_cutouts/",
         
         if print_statements:
             print(f"RACS cutout found: {save_dir}{save_str}")
-        return save_str
+        return save_dir+save_str
     
     # doesn't exist:
     
