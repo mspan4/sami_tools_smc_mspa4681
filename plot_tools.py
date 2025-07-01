@@ -120,7 +120,7 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
     
 
     catids = tab['CATID']
-    print(catids)
+
     mstar = tab['M_STAR']
     redshift = tab['Z_SPEC']
     bpt_classification = tab['CATEGORY_BPT_AGN']
@@ -132,28 +132,29 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
 
     n = 0
     for catid in catids:
+        print(f"\nCATID: {catid: <12}    ({n}/{len(catids)})")
 
         dl = cosmo.luminosity_distance(redshift[n])
         dlcm = dl.to(u.cm)
         lum = xrayflux[n]*(dlcm/u.cm)**2
-        print(dl,dlcm,lum)
+
                 #define label:
-        label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(0.2-2.3kev)={2:6.2e} erg/s, BPT classification - {3}'.format(mstar[n],redshift[n],lum, bpt_classification[n])
+        label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(0.2-2.3kev)={2:6.2e} erg/s, BPT classification: {3}'.format(mstar[n],redshift[n],lum, bpt_classification[n])
 
 
         if radio_sources:
             # Convert to Luminosity, Sectiion 3.2 of Pracy et al. 2016, in W/Hz
             alpha_spectral_index = -0.7
             lum =  radioflux[n] / (u.erg/u.s/(u.cm**2)/u.Hz) * 4 * np.pi * ( (dl.to(u.cm)/u.cm) **2) * 1 / ( (1+redshift[n])** (1+alpha_spectral_index) ) 
-            print(lum)
+
             
                     #define label:
-            label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(1367.5 MHz)={2:6.2e} erg/s /Hz, BPT classification - {3}'.format(mstar[n],redshift[n],lum.decompose(), bpt_classification[n])
+            label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(1367.5 MHz)={2:6.2e} erg/s /Hz, BPT classification: {3}'.format(mstar[n],redshift[n],lum.decompose(), bpt_classification[n])
 
 
 
        
-        print(label)
+        #print(label)
         
         usebin=bin
         # fix adaptive bining for this object:
