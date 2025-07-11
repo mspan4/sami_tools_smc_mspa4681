@@ -28,22 +28,67 @@ import astropy.units as u
 
 from PIL import Image
 
+from astroquery.casda import Casda 
+from astroquery.utils.tap.core import TapPlus 
+from urllib.parse import urlencode
+from urllib.request import urlretrieve
+import pylab as py
+from PIL import Image
+import glob
+import os
+
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from astropy.table import Table
+from astropy.cosmology import WMAP9 as cosmo
+import astropy.units as u
+
 # Folder location with all SAMI cubes:
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
+# Location of SAMI AGN Summary Catalogue
+AGN_Summary_path = "SAMI_AGN_matches.fits"
+
+# CASDA OPAL username to access RACS data:
+OPAL_USER = "mspa4681@uni.sydney.edu.au"
 ###############################################################
 
 import plot_tools
+from racs_cutout_tools import get_racs_image_cutout
 
-catid = 9011900430 # highest flux radio source
-plot_tools.plot_dr3_sov(catid, isradio=True)
+hdulist = fits.open(AGN_Summary_path)
+tab = hdulist[1].data
 
-#url =     'http://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx?ra=174.1531666666667&dec=0.815861111111111&width=150&height=150&scale=0.49992'
-#url = url.replace("http://", "https://")
-#urlretrieve(url, 'SDSS_cutout.jpg')
+'''
+test_catid = 32362
+plot_tools.plot_dr3_sov(test_catid, isradio=True)
 
-#cutout_file = "/suphys/mspa4681/.astropy/cache/astroquery/Casda/cutout-936737-imagecube-71340.fits"
-#image = fits.open(cutout_file)[0].data.squeeze()
-#py.contour(np.fliplr(image), cmap='magma')
-#py.show()
+#ab_relevant = tab[tab['catid'] == test_catid]
+
+apspecfile_blue = os.path.join(ifs_path, str(test_catid),str(test_catid)+'_A_spectrum_3-arcsec_blue.fits')
+hdulist = fits.open(apspecfile_blue)
+ra = hdulist[0].header['CATARA']
+dec = hdulist[0].header['CATADEC']
+print(ra)
+print(dec)
+'''
+
+
+#impix = 3 * 50
+#imsize = 1*0.4166*u.arcmin
+
+#get_racs_image_cutout(ra, dec, imsize)
+
+
+
+BPT_AGN_labels = (6,7,8,9,10,-1)
+
+radio_AGN_catids = tab['CATID'][np.isin(tab['CATEGORY_BPT_AGN'], BPT_AGN_labels)]
+
+plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'many_sov_radio_AGNs.pdf', radio_sources=True)
+
+
+
+#catid = 9011900430 # highest flux radio source
+#plot_tools.plot_dr3_sov(catid, isradio=True)
 
