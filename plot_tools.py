@@ -9,6 +9,7 @@ import scipy as sp
 import astropy.io.fits as fits
 from scipy import stats
 import glob
+import warnings
 
 from datetime import datetime
 from matplotlib.backends.backend_pdf import PdfPages
@@ -100,7 +101,7 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile,bin='default', radio_sources=True):
+def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True):
 
     """Plot many SOV plots, reading list from the Matched AGN FITS file"""
 
@@ -117,8 +118,18 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
     if radio_sources:
         isradio_ls = tab['IS_RADIOSOURCE']==1
         tab = tab[isradio_ls]
-    
 
+
+    if specific_catids != 'All':
+        tab = tab[np.isin(tab['CATID'], specific_catids)] # redefine tab to only include specific_catids
+        
+        #check if any missing catids:
+        missing_catids = np.setdiff1d(specific_catids, tab['CATID'])
+
+        
+        if len(missing_catids) >0:
+            warnings.warn(f"{len(missing_catids)} CATIDs not in given catfile: \n {missing_catids}", UserWarning)
+            
     catids = tab['CATID']
 
     mstar = tab['M_STAR']
@@ -128,11 +139,11 @@ def plot_sov_many_new(catfile,bin='default', radio_sources=True):
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
     isradio_ls = tab['IS_RADIOSOURCE']
 
-    pdf = PdfPages('dr3_sov_pdfs/sov_many.pdf')
+    pdf = PdfPages(f"dr3_sov_pdfs/{save_name}")
 
     n = 0
     for catid in catids:
-        print(f"\nCATID: {catid: <12}    ({n}/{len(catids)})")
+        print(f"\nCATID: {catid: <12} ({n+1}/{len(catids)})")
 
         dl = cosmo.luminosity_distance(redshift[n])
         dlcm = dl.to(u.cm)
@@ -262,10 +273,11 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
     ax1.set(ylabel='Flux',xlabel='Wavelength (\AA)')
     #ax1.set(ylabel='Flux (1E-17 erg/cm$^2$/s/Ang)')
-
-    # download SDSS RGB:
-    impix = 3 * 50
-    imsize = 3 * 0.4166*u.arcmin
+    
+    # download large SDSS RGB:
+    large_image_scale = 30
+    impix = large_image_scale * 50
+    imsize = large_image_scale * 0.4166*u.arcmin
     cutoutbaseurl = 'https://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
     query_string = urlencode(dict(ra=ra,dec=dec, 
                                      width=impix, height=impix, 
@@ -280,6 +292,24 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     ax21.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
     ax21.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax21.transAxes)
 
+    # download SDSS RGB:
+    medium_image_scale = 3
+    impix = medium_image_scale * 50
+    imsize = medium_image_scale * 0.4166*u.arcmin
+    cutoutbaseurl = 'https://skyservice.pha.jhu.edu/DR12/ImgCutout/getjpeg.aspx'
+    query_string = urlencode(dict(ra=ra,dec=dec, 
+                                     width=impix, height=impix, 
+                                     scale=imsize.to(u.arcsec).value/impix))
+    url = cutoutbaseurl + '?' + query_string
+    
+    # this downloads the image to your disk
+    urlretrieve(url, 'SDSS_cutout.jpg')
+    image = Image.open('SDSS_cutout.jpg')
+
+    ax22 = fig1.add_subplot(gs[1,1])
+    ax22.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
+    ax22.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax22.transAxes)
+
     # download SDSS RGB of same size as SAMI IFU:
     impix = 50
     #imsize = 0.25*u.arcmin
@@ -293,22 +323,32 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     urlretrieve(url, 'SDSS_cutout_small.jpg')
     image = Image.open('SDSS_cutout_small.jpg')
 
-    ax22 = fig1.add_subplot(gs[1,1])
-    ax22.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
-    ax22.text(0.05, 0.05,'SDSS zoom',color='w',horizontalalignment='left',verticalalignment='center', transform=ax22.transAxes)
+    ax23 = fig1.add_subplot(gs[1,2])
+    ax23.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
+    ax23.text(0.05, 0.05,'SDSS zoom',color='w',horizontalalignment='left',verticalalignment='center', transform=ax23.transAxes)
 
     #image.show()
     
     # plot radio contours on SDSS images if isradio
     if isradio:
         # download RACS Radio image cutout:
-        impix = 3 * 50
-        imsize = 3 * 0.4166*u.arcmin
+        
+        impix = large_image_scale * 50
+        imsize = large_image_scale * 0.4166*u.arcmin
         
         cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        
+        
+        impix = medium_image_scale * 50
+        imsize = medium_image_scale * 0.4166*u.arcmin
+        
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
+        image = fits.open(cutout_file)[0].data.squeeze()
+        
+        ax22.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
         # again for same size as SAMI IFU:
@@ -319,10 +359,10 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax22.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax23.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
-    ax23 = fig1.add_subplot(gs[1,2])
+    ax24 = fig1.add_subplot(gs[1,3])
 
     # velocity fields:
     ax31 = fig1.add_subplot(gs[2,0])
@@ -338,10 +378,10 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     ax31.text(0.05, 0.05,'vel stel', horizontalalignment='left',verticalalignment='center', transform=ax31.transAxes)
 
     # plot flux from SAMI:
-    im23 = ax23.imshow(stelflux,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=0.0,vmax=np.nanpercentile(stelflux,98.0))
-    axins23 = inset_axes(ax23,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im23, cax=axins23, orientation="horizontal")
-    ax23.text(0.05, 0.05,'flux stel', horizontalalignment='left',verticalalignment='center', transform=ax23.transAxes)
+    im24 = ax24.imshow(stelflux,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=0.0,vmax=np.nanpercentile(stelflux,98.0))
+    axins24 = inset_axes(ax24,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im24, cax=axins24, orientation="horizontal")
+    ax24.text(0.05, 0.05,'flux stel', horizontalalignment='left',verticalalignment='center', transform=ax24.transAxes)
     
     # stellar sigma:
     ax32 = fig1.add_subplot(gs[2,1])
