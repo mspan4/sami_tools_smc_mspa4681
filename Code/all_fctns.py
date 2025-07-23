@@ -730,8 +730,8 @@ def SFR_1_4GHz_ho03(reduced_SAMI_AGN_summary_table, CATID_redshifts, survey = 'R
     returns: SFR in $M _\\odot yr^-1$
     """
     if survey == 'RACS':
-        radio_fluxes_Jy = reduced_SAMI_AGN_summary_table['RADIO_TOTALFLUX']       *u.mJy   # in Jy
-        radio_errors_Jy = reduced_SAMI_AGN_summary_table['RADIO_TOTALFLUX_ERR']   *u.mJy   # in Jy
+        radio_fluxes_Jy = reduced_SAMI_AGN_summary_table['RACS_TOTALFLUX']       *u.mJy   # in Jy
+        radio_errors_Jy = reduced_SAMI_AGN_summary_table['RACS_TOTALFLUX_ERR']   *u.mJy   # in Jy
 
     elif survey == 'FIRST':
         radio_fluxes_Jy = reduced_SAMI_AGN_summary_table['NVSS_TOTALFLUX']       *u.mJy   # in Jy
@@ -865,13 +865,8 @@ def get_SFRs(catalogue_filepath, SAMI_AGN_summary_table, SAMI_SFR_table_hdu, rel
 
 
     if SAMI_SFR_table_type == 'SFR':
-        reduced_SAMI_SFR_table_hdu = SAMI_SFR_table_hdu[np.isin(SAMI_SFR_table_hdu['catid'], relevant_CATIDs)]
-        reduced_SAMI_SFR_table_hdu.rename_column('catid', 'CATID')
-
-        # join in otder to ensure matching of CATIDs order
-        reduced_SAMI_AGN_summary_table = join(reduced_SAMI_AGN_summary_table, reduced_SAMI_SFR_table_hdu, 'CATID', join_type='left')
-        reduced_SAMI_AGN_summary_table.rename_column('SFR_best', 'SFR_SAMI')
-        reduced_SAMI_AGN_summary_table['SFR_SAMI'] = 10**reduced_SAMI_AGN_summary_table['SFR_SAMI']
+        reduced_SAMI_AGN_summary_table.rename_column('SFR_SAMI', 'SFR_SAMI_temporary')
+        reduced_SAMI_AGN_summary_table['SFR_SAMI_temporary'] = 10**reduced_SAMI_AGN_summary_table['SFR_SAMI_temporary']
 
     elif SAMI_SFR_table_type in ('Halpha', 'SFR_spectra'):
         SFR_SAMI = np.full(len(reduced_SAMI_AGN_summary_table), np.nan)
@@ -891,7 +886,7 @@ def get_SFRs(catalogue_filepath, SAMI_AGN_summary_table, SAMI_SFR_table_hdu, rel
             SFR_Halpha, Halpha_SN = SFR_Halpha_ho03(reduced_SAMI_SFR_table_hdu, reduced_SAMI_AGN_summary_table['CATID_redshifts'])
             SFR_SAMI[SAMI_spectra_mask] = SFR_Halpha
 
-        reduced_SAMI_AGN_summary_table.add_column(astropy.table.Column(SFR_SAMI, name='SFR_SAMI'))
+        reduced_SAMI_AGN_summary_table.add_column(astropy.table.Column(SFR_SAMI, name='SFR_SAMI_temporary'))
     
 
     if survey_type =='Radio':        
@@ -906,7 +901,7 @@ def get_SFRs(catalogue_filepath, SAMI_AGN_summary_table, SAMI_SFR_table_hdu, rel
 
 
 
-    return reduced_SAMI_AGN_summary_table['SFR_survey'], reduced_SAMI_AGN_summary_table['SFR_SAMI']
+    return reduced_SAMI_AGN_summary_table['SFR_survey'], reduced_SAMI_AGN_summary_table['SFR_SAMI_temporary']
 
 
 def get_SAMI_SFRs(Summary_table, SAMI_SFR_table_hdu):
