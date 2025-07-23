@@ -55,6 +55,26 @@ OPAL_USER = "mspa4681@uni.sydney.edu.au"
 
 import plot_tools
 from racs_cutout_tools import get_racs_image_cutout
+import cube_fctns
+bin = 'default'
+catid = 9011900430
+
+stelvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity_'+bin+'_two-moment.fits')
+stelvel = fits.getdata(stelvel_file, ext=0)
+stelflux = fits.getdata(stelvel_file, extname='FLUX')
+
+hdul = fits.open(stelvel_file)
+print(hdul.info())
+
+gassig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-vdisp_'+bin+'_1-comp.fits')
+print(fits.open(gassig_file).info())
+
+haflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Halpha_'+bin+'_1-comp.fits')
+print(fits.open(haflux_file).info())
+
+haflux_file = cube_fctns.get_specific_cube_file(catid, 'haflux')
+print(fits.open(haflux_file).info())
+
 
 hdulist = fits.open(AGN_Summary_path)
 tab = hdulist[1].data
@@ -80,12 +100,14 @@ print(dec)
 #get_racs_image_cutout(ra, dec, imsize)
 
 
-
+'''
 BPT_AGN_labels = (6,7,8,9,10,-1)
 
 radio_AGN_catids = tab['CATID'][np.isin(tab['CATEGORY_BPT_AGN'], BPT_AGN_labels)]
 
 plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'many_sov_radio_AGNs.pdf', radio_sources=True)
+'''
+
 
 
 
