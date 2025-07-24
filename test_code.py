@@ -59,20 +59,8 @@ import cube_fctns
 bin = 'default'
 catid = 9011900430
 
-stelvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity_'+bin+'_two-moment.fits')
-stelvel = fits.getdata(stelvel_file, ext=0)
-stelflux = fits.getdata(stelvel_file, extname='FLUX')
 
-hdul = fits.open(stelvel_file)
-print(hdul.info())
-
-gassig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-vdisp_'+bin+'_1-comp.fits')
-print(fits.open(gassig_file).info())
-
-haflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Halpha_'+bin+'_1-comp.fits')
-print(fits.open(haflux_file).info())
-
-haflux_file = cube_fctns.get_specific_cube_file(catid, 'haflux')
+haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
 print(fits.open(haflux_file).info())
 
 

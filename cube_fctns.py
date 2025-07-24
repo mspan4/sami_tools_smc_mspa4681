@@ -40,7 +40,14 @@ def get_specific_cube_file(catid, cube_type, ifs_path = ifs_path, bin = 'default
         raise TypeError(f"Cube type: {cube_type} is not valid")
         return None
     
-
+def get_cube_info(cube_type, ifs_path = ifs_path, bin = 'default'):
+    catid = 6821 #smallest CATID
+    
+    cube_file = get_specific_cube_file(catid, cube_type=cube_type, ifs_path=ifs_path, bin=bin)
+    cube_hdul = fits.open(cube_file)
+    cube_info = cube_hdul.info()
+    print(cube_info)
+    return None
 
 def get_centroid(flux, averaging_radius=5):
     """
@@ -80,6 +87,7 @@ def get_centroid(flux, averaging_radius=5):
     y_centroid = np.nansum(flux_masked_total * y_grid) / total_flux
 
     return (x_centroid, y_centroid)
+
 
 
 def apply_nan_circle_mask(array, radius, center):
