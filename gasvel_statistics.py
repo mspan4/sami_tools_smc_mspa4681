@@ -32,7 +32,7 @@ AGN_Summary_table = fits.open(AGN_Summary_path)[1].data
 all_CATIDs = AGN_Summary_table['CATID']
 
 
-def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('shared_catalogues','gassig_statistics.fits'), ifs_path=ifs_path, snlim=5.0, save_file = True):
+def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('shared_catalogues','gassig_statistics.fits'), ifs_path=ifs_path, snlim=10.0, save_file = True):
     """
     Create a table containing velocity dispersion statistics for each given CATID.
     """
