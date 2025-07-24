@@ -37,7 +37,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
     Create a table containing velocity dispersion statistics for each given CATID.
     """
     # setup table
-    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM'])
+    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM'], dtype=[int, float, float])
 
     # get the gassig cube for each CATID
     for catid in catids:
@@ -70,7 +70,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         
         
     if save_file == True:
-        vel_statistics_table.write(save_filepath)
+        vel_statistics_table.write(save_filepath, overwrite=True)
         
     return vel_statistics_table
     
