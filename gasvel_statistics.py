@@ -61,7 +61,6 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         gassig_masked = np.ma.masked_array(gassig,(ha_snflag>0))
         gassig_err_masked = np.ma.masked_array(gassig_err,(ha_snflag>0))
 
-
         # get the median velocity dispersion (and SEM)
         median_vel_disp = np.ma.median(gassig_masked)
         vel_disp_sem = stats.sem(gassig_masked.compressed())
