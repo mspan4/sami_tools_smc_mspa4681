@@ -102,3 +102,6 @@ plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'ma
 #catid = 9011900430 # highest flux radio source
 #plot_tools.plot_dr3_sov(catid, isradio=True)
 
+catid = 91961
+plot_tools.plot_dr3_sov(catid, isradio=False)
+

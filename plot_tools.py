@@ -289,7 +289,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     image = Image.open('SDSS_cutout.jpg')
 
     ax21 = fig1.add_subplot(gs[1,0])
-    ax21.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
+    ax21.imshow(np.flipud(image),origin='lower',interpolation='nearest')
     ax21.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax21.transAxes)
 
     # download SDSS RGB:
@@ -307,7 +307,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     image = Image.open('SDSS_cutout.jpg')
 
     ax22 = fig1.add_subplot(gs[1,1])
-    ax22.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
+    ax22.imshow(np.flipud(image),origin='lower',interpolation='nearest')
     ax22.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax22.transAxes)
 
     # download SDSS RGB of same size as SAMI IFU:
@@ -324,7 +324,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     image = Image.open('SDSS_cutout_small.jpg')
 
     ax23 = fig1.add_subplot(gs[1,2])
-    ax23.imshow(np.fliplr(image),origin='lower',interpolation='nearest')
+    ax23.imshow(np.flipud(image),origin='lower',interpolation='nearest')
     ax23.text(0.05, 0.05,'SDSS zoom',color='w',horizontalalignment='left',verticalalignment='center', transform=ax23.transAxes)
 
     #image.show()
@@ -339,7 +339,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax21.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax21.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
         
         
         impix = medium_image_scale * 50
@@ -348,7 +348,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax22.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax22.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
         # again for same size as SAMI IFU:
@@ -359,7 +359,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax23.contour(np.fliplr(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax23.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
     ax24 = fig1.add_subplot(gs[1,3])
