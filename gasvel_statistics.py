@@ -80,8 +80,8 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         # get the median velocity dispersion within 5 spaxels of the centroid
         if centroid_position is not None:
             reduced_5arcsec_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2)
-            median_5arcsec_vel_disp = np.ma.median(reduced_5arcsec_gassig_masked)
-            sem_5arcsec_vel_disp = stats.sem(reduced_5arcsec_gassig_masked, axis=None)
+            median_5arcsec_vel_disp = np.nanmedian(reduced_5arcsec_gassig_masked)
+            sem_5arcsec_vel_disp = stats.sem(reduced_5arcsec_gassig_masked, axis=None, nan_policy='omit')
 
         else:
             median_5arcsec_vel_disp = np.nan
