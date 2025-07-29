@@ -103,11 +103,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         # add to table
         vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5arcsec_vel_disp, sem_5arcsec_vel_disp])
 
-        
-        break
-
-        
-        
+ 
     if save_file == True:
         vel_statistics_table.write(save_filepath, overwrite=True)
         
