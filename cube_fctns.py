@@ -75,11 +75,9 @@ def get_centroid(flux, averaging_radius=5, array_dim = 3):
     # Find the brightest spaxel and set as temporary center
     max_index = np.unravel_index(np.nanargmax(flux_total), flux_total.shape)
 
-    # Apply circular NaN mask
-    masked_flux = apply_nan_circle_mask(flux, averaging_radius, max_index, array_dim=2)
 
-    # Collapse masked flux along λ again
-    flux_masked_total = np.nansum(masked_flux, axis=0)  # shape (x, y)
+    # Apply circular NaN mask
+    flux_masked_total = apply_nan_circle_mask(flux_total, averaging_radius, max_index, array_dim=2)
 
     # Create coordinate grids
     x_dim, y_dim = flux_total.shape[0], flux_total.shape[1]
@@ -101,7 +99,7 @@ def apply_nan_circle_mask(array, radius, center, array_dim=3):
     Sets values outside a circular region to NaN. Assumes array shape is (λ, x, y).
     
     Parameters:
-        array: np.ndarray, shape (λ, x, y)
+        array: np.ndarray, shape (λ, x, y) or (x, y)
         radius: circle radius in spaxels
         center: (x, y) center of circle
 
@@ -121,10 +119,13 @@ def apply_nan_circle_mask(array, radius, center, array_dim=3):
     cx, cy = center
     mask2d = ((x - cx)**2 + (y - cy)**2) <= radius**2 
 
-    # Broadcast mask to initial array
-    mask3d = np.broadcast_to(mask2d, array.shape)
+    # Apply 2D mask
+    if array.ndim == 3:
+        mask = np.broadcast_to(mask2d, array.shape)
+    else:
+        mask = mask2d
 
-    masked_array = np.where(mask3d, array, np.nan)
+    masked_array = np.where(mask, array, np.nan)
     return masked_array
 
     

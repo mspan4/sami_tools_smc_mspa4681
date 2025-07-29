@@ -9,7 +9,7 @@ import scipy as sp
 from scipy import stats
 import glob
 import sys
-
+from matplotlib.backends.backend_pdf import PdfPages
 
 import astropy
 from astropy.io import fits
@@ -60,6 +60,10 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         gassig_err = fits.getdata(gassig_file, extname='VDISP_ERR')[0,:,:]
 
         gassig_masked = np.ma.masked_array(gassig,(ha_snflag>0))
+        
+        axs[0].imshow(gassig_masked, origin='lower')
+        axs[0].set_title('gassig_masked')
+        
         gassig_err_masked = np.ma.masked_array(gassig_err,(ha_snflag>0))
 
         # get the median velocity dispersion (and SEM)
@@ -76,12 +80,21 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
 
         # now get the centroid
         centroid_position = cube_fctns.get_centroid(stelflux, averaging_radius=centroid_radius, array_dim=2)
+        
+        axs[1].imshow(stelflux, origin='lower')
+        axs[1].plot(centroid_position[1], centroid_position[0], '.')
+        axs[1].set_title('stelflux')
+        print(centroid_position)
+       
 
         # get the median velocity dispersion within 5 spaxels of the centroid
         if centroid_position is not None:
             reduced_5arcsec_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2)
             median_5arcsec_vel_disp = np.nanmedian(reduced_5arcsec_gassig_masked)
+
             sem_5arcsec_vel_disp = stats.sem(reduced_5arcsec_gassig_masked, axis=None, nan_policy='omit')
+            axs[2].imshow(reduced_5arcsec_gassig_masked, origin='lower')
+            axs[2].set_title('5arcsec_gassig')
 
         else:
             median_5arcsec_vel_disp = np.nan
@@ -90,6 +103,8 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         # add to table
         vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5arcsec_vel_disp, sem_5arcsec_vel_disp])
 
+        
+        break
 
         
         
@@ -98,5 +113,15 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         
     return vel_statistics_table
     
-    
+fig1 = py.figure(1,constrained_layout=True)
+fig1.clf()
+axs = fig1.subplots(1,3)
+axs = axs.flatten()
 get_gassig_statistics_table()
+
+pdf = PdfPages(f"test_plots/gassig_cube_testing")
+py.draw()
+# pause for input if plotting all the spectra:
+#yn = input('Continue? (y/n):')
+py.savefig(pdf, format='pdf')
+pdf.close()
