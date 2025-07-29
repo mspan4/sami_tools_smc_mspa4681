@@ -990,9 +990,13 @@ def get_closest_galaxy_match(summary_table, input_CATID, possible_CATIDs, mass_c
     return closest_match_CATID, min_diff
 
 
-def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, mass_colname='M_STAR', SFR_colname='SFR_SAMI', log_scale=False):
+def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, 
+                                mass_colname='M_STAR', SFR_colname='SFR_SAMI', log_scale=False, 
+                                distribution_plots=False, figsize=(10, 6), xlabels=('log M_STAR [M$_\\odot$]', 'log SFR [M$_\\odot$ yr$^{-1}$]'), 
+                                mass_bins=np.linspace(9,12,20), SFR_bins = np.linspace(-3, 2, 20), labels=('Matched Galaxy', 'Input Galaxy')):
     """
-    Matches each galaxy in set A to one in set B, minimizing a cost function based on mass and SFR.
+    Matches each galaxy in set A to one in set B, minimizing a cost function based on mass and SFR. 
+    Optional plotting functionality, for distribution comparison of input and matched galaxies.
     """
 
 
@@ -1016,6 +1020,23 @@ def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, ma
 
     for i, j in zip(indices_A, indices_B):
         matched_galaxies_table.add_row((input_CATIDs[i], possible_CATIDs[j], cost_matrix[i, j]))
+
+
+    if distribution_plots:
+        fig, axs = plt.subplots(1, 2, figsize=figsize)
+        axs =axs.flatten()
+        axs[0].set(title='Mass Distribution of Matched Galaxies and AGNs', xlabel=xlabels[0], ylabel='Count')
+        axs[0].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Matched_CATID'])][mass_colname], bins=mass_bins, alpha=0.5, label=labels[0])
+        axs[0].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Input_CATID'])][mass_colname], bins=mass_bins, alpha=0.5, label=labels[1])
+        axs[0].legend()
+
+        axs[1].set(title='SFR Distribution of Matched Galaxies and AGNs', xlabel=xlabels[1], ylabel='Count')
+        axs[1].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Matched_CATID'])][SFR_colname], bins=SFR_bins, alpha=0.5, label=labels[0])
+        axs[1].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Input_CATID'])][SFR_colname], bins=SFR_bins, alpha=0.5, label=labels[1])
+        axs[1].legend()
+
+        plt.tight_layout()
+        plt.show()
 
     return matched_galaxies_table
 
