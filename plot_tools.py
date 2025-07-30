@@ -127,7 +127,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         isradio_ls = np.zeros(len(tab['IS_RADIOSOURCE']))
 
 
-    if specific_catids != 'All':
+    if type(specific_catids) != str:
         tab = tab[np.isin(tab['CATID'], specific_catids)] # redefine tab to only include specific_catids
         
         #check if any missing catids:

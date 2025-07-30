@@ -106,6 +106,9 @@ def apply_nan_circle_mask(array, radius, center, array_dim=3):
     Returns:
         masked_array: np.ndarray of same shape with NaNs outside the circle
     """
+    # Ensure input is a masked array
+    array = np.ma.masked_array(array)
+    
     if array_dim == 3:
         λ_dim, x_dim, y_dim = array.shape
         
@@ -119,13 +122,18 @@ def apply_nan_circle_mask(array, radius, center, array_dim=3):
     cx, cy = center
     mask2d = ((x - cx)**2 + (y - cy)**2) <= radius**2 
 
+
     # Apply 2D mask
     if array.ndim == 3:
         mask = np.broadcast_to(mask2d, array.shape)
     else:
         mask = mask2d
-
-    masked_array = np.where(mask, array, np.nan)
+    
+    # since the given array is normally a masked array
+    #masked_array = np.ma.where(mask, array, np.nan)
+    masked_array = array.copy()
+    
+    masked_array.mask = masked_array.mask | ~mask
     return masked_array
 
     
