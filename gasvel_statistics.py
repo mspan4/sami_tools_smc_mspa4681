@@ -114,8 +114,9 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
 
             
             if reduced_5spaxel_gassig_masked_num_spaxels > min_spaxel_count:
-                median_5spaxel_vel_disp = np.nanmedian(reduced_5spaxel_gassig_masked)
+                median_5spaxel_vel_disp = np.ma.median(reduced_5spaxel_gassig_masked)
                 sem_5spaxel_vel_disp = stats.sem(reduced_5spaxel_gassig_masked, axis=None, nan_policy='omit')
+
             else:
                 median_5spaxel_vel_disp = np.nan
                 sem_5spaxel_vel_disp = np.nan
