@@ -109,6 +109,8 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     if radio_sources:
         casda=Casda()
         casda.login(username=OPAL_USER, store_password=False)
+    else:
+        casda=None
         
         
     hdulist = fits.open(catfile)
