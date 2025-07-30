@@ -101,7 +101,21 @@ plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'ma
 
 #catid = 9011900430 # highest flux radio source
 #plot_tools.plot_dr3_sov(catid, isradio=True)
+'''
+filename = "shared_catalogues/gassig_statistics.fits"
+gassig_statistics = fits.open(filename)
+gassig_table = gassig_statistics[0].data
+print(gassig_table)
 
-catid = 91961
-plot_tools.plot_dr3_sov(catid, isradio=False)
+mask = gassig_table['MEDIAN_VEL_DISP'] > 400
+relevant_CATIDs = gassig_statistics['CATID'][mask]
+
+'''
+relevant_CATIDs = [30615 ,    214250  ,   273336    , 508132 ,9011900034 ,9011900137,
+ 9388000003, 9388000041, 9403800001 ,9403800117]
+
+plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name = 'high_gassig_many_sov.pdf', radio_sources=False)
+
+catid = 6821
+#plot_tools.plot_dr3_sov(catid, isradio=False)
 
