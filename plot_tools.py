@@ -65,7 +65,7 @@ def plot_sov_many(catfile,bin='default'):
     redshift = tab['z_tonry']
     xrayflux = tab['XRAY_ML_FLUX_0']
 
-    
+
     pdf = PdfPages('dr3_sov_pdfs/sov_many.pdf')
 
     n = 0
@@ -101,9 +101,10 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True):
-
-    """Plot many SOV plots, reading list from the Matched AGN FITS file"""
+def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False):
+    """
+    Plot many SOV plots, reading list from the Matched AGN FITS file
+    """
 
     # get casda credentials if needed (only if isradio)
     if radio_sources:
@@ -119,7 +120,11 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     
     if radio_sources:
         isradio_ls = tab['IS_RADIOSOURCE']==1
-        tab = tab[isradio_ls]
+        if only_radio:
+            tab = tab[isradio_ls]
+        
+    else:
+        isradio_ls = np.zeros(len(tab['IS_RADIOSOURCE']))
 
 
     if specific_catids != 'All':
@@ -139,7 +144,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     bpt_classification = tab['CATEGORY_BPT_AGN']
     xrayflux = tab['eROSITA_TOTALFLUX_1'] # from eROSITA
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
-    isradio_ls = tab['IS_RADIOSOURCE']
+
 
     pdf = PdfPages(f"dr3_sov_pdfs/{save_name}")
 
@@ -179,7 +184,9 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         py.draw()
         # pause for input if plotting all the spectra:
         #yn = input('Continue? (y/n):')
-        py.savefig(pdf, format='pdf')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            py.savefig(pdf, format='pdf')
 
         n=n+1
         
@@ -236,9 +243,10 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
     # read SDSS spectrum, if available:
     sdss_spec_files = glob.glob('/Users/scroom/data/sami/fluxcal/sdss_spec2/'+str(catid)+'*.fits')
-    print('SDSS spectra found:',sdss_spec_files)
+
     nsdss = np.size(sdss_spec_files)
     if (nsdss > 0):
+        print('SDSS spectra found:',sdss_spec_files)
         hdulist = fits.open(sdss_spec_files[0])
         sdss_spec_table = hdulist['COADD'].data
         sdss_flux = sdss_spec_table['flux']
@@ -260,7 +268,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         hdulist.close()
         ax1.plot(sdss_lam_air,sdss_flux,color='k',label='SDSS scaled')
         
-    print(nsdss)
+        print(nsdss)
     
     ax1.plot(sami_lam_blue,sami_flux_blue,color='b',label='SAMI blue arm')
     ax1.plot(sami_lam_red,sami_flux_red,color='r',label='SAMI red arm')

@@ -59,13 +59,14 @@ import cube_fctns
 bin = 'default'
 catid = 9011900430
 
-
+'''
 haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
 print(fits.open(haflux_file).info())
 
-
 hdulist = fits.open(AGN_Summary_path)
 tab = hdulist[1].data
+'''
+
 
 '''
 test_catid = 32362
@@ -93,7 +94,7 @@ BPT_AGN_labels = (6,7,8,9,10,-1)
 
 radio_AGN_catids = tab['CATID'][np.isin(tab['CATEGORY_BPT_AGN'], BPT_AGN_labels)]
 
-plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'many_sov_radio_AGNs.pdf', radio_sources=True)
+plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'many_sov_radio_AGNs.pdf', only_radio=True)
 '''
 
 
@@ -111,10 +112,11 @@ mask = gassig_table['MEDIAN_VEL_DISP'] > 400
 relevant_CATIDs = gassig_statistics['CATID'][mask]
 
 '''
-relevant_CATIDs = [30615 ,    214250  ,   273336    , 508132 ,9011900034 ,9011900137,
- 9388000003, 9388000041, 9403800001 ,9403800117]
 
-plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name = 'high_gassig_many_sov.pdf', radio_sources=False)
+relevant_CATIDs = [30615, 214250, 273336, 508132, 9011900034, 9011900137,
+ 9388000003, 9388000041, 9403800001, 9403800117]
+
+plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name='high_gassig_many_sov.pdf', radio_sources=False)
 
 catid = 6821
 #plot_tools.plot_dr3_sov(catid, isradio=False)
