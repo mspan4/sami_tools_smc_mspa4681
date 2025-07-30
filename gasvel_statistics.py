@@ -38,7 +38,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
     Create a table containing velocity dispersion statistics for each given CATID.
     """
     # setup table
-    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM', '5ARCSEC_MEDIAN_VEL_DISP', '5ARCSEC_VEL_DISP_SEM'], dtype=[int, float, float, float, float])
+    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM', '5SPAXEL_MEDIAN_VEL_DISP', '5SPAXEL_VEL_DISP_SEM'], dtype=[int, float, float, float, float])
 
     # get the gassig cube for each CATID
     for catid in catids:
@@ -84,26 +84,25 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         axs[1].imshow(stelflux, origin='lower')
         axs[1].plot(centroid_position[1], centroid_position[0], '.')
         axs[1].set_title('stelflux')
-        print(centroid_position)
        
 
         # get the median velocity dispersion within 5 spaxels of the centroid
         if centroid_position is not None:
-            reduced_5arcsec_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2)
-            median_5arcsec_vel_disp = np.nanmedian(reduced_5arcsec_gassig_masked)
+            reduced_5spaxel_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2)
+            median_5spaxel_vel_disp = np.nanmedian(reduced_5spaxel_gassig_masked)
 
-            sem_5arcsec_vel_disp = stats.sem(reduced_5arcsec_gassig_masked, axis=None, nan_policy='omit')
-            axs[2].imshow(reduced_5arcsec_gassig_masked, origin='lower')
-            axs[2].set_title('5arcsec_gassig')
+            sem_5spaxel_vel_disp = stats.sem(reduced_5spaxel_gassig_masked, axis=None, nan_policy='omit')
+            axs[2].imshow(reduced_5spaxel_gassig_masked, origin='lower')
+            axs[2].set_title('5spaxel_gassig')
 
         else:
-            median_5arcsec_vel_disp = np.nan
-            sem_5arcsec_vel_disp = np.nan
+            median_5spaxel_vel_disp = np.nan
+            sem_5spaxel_vel_disp = np.nan
 
         # add to table
-        vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5arcsec_vel_disp, sem_5arcsec_vel_disp])
+        vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5spaxel_vel_disp, sem_5spaxel_vel_disp])
 
- 
+
     if save_file == True:
         vel_statistics_table.write(save_filepath, overwrite=True)
         
