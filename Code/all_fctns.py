@@ -767,6 +767,38 @@ def SFR_1_4GHz_ho03(reduced_SAMI_AGN_summary_table, CATID_redshifts, survey = 'R
     SFR_array = SFR_array / 0.62 # convert to Chabrier IMF from Salpeter IMF (Madusha sent this through)
     return SFR_array, SN
 
+def get_radio_luminosity(SAMI_AGN_summary_table, CATIDs, survey = 'RACS'):
+    """
+    Returns the radio luminosity in W for the given CATIDs.
+    """
+    CATID_mask = np.isin(SAMI_AGN_summary_table['CATID'], CATIDs)
+    reduced_SAMI_AGN_summary_table = SAMI_AGN_summary_table[CATID_mask]
+
+    CATID_redshifts = reduced_SAMI_AGN_summary_table['Z_SPEC']
+
+    if survey == 'RACS':
+        radio_fluxes_Jy = reduced_SAMI_AGN_summary_table['RACS_TOTALFLUX']       *u.mJy   # in Jy
+        radio_errors_Jy = reduced_SAMI_AGN_summary_table['RACS_TOTALFLUX_ERR']   *u.mJy   # in Jy
+
+    elif survey == 'FIRST':
+        radio_fluxes_Jy = reduced_SAMI_AGN_summary_table['NVSS_TOTALFLUX']       *u.mJy   # in Jy
+        radio_errors_Jy = np.zeros(len(reduced_SAMI_AGN_summary_table))  *u.mJy   # in Jy
+
+    else:
+        raise TypeError(f"Invalid radio survey {survey}, accepted surveys are RACS or FIRST")
+
+
+    CATID_luminosity_distances = get_luminosity_distance(CATID_redshifts) # in m
+
+    # convert Jy to W /m^2 /Hz
+    radio_fluxes = radio_fluxes_Jy.to(u.W / u.m**2 /u.Hz) # in W/m^2 /Hz
+    radio_errors = radio_errors_Jy.to(u.W / u.m**2/u.Hz) 
+    
+    # Convert to Luminosity, Sectiion 3.2 of Pracy et al. 2016, in W 
+    alpha_spectral_index = -0.7
+    L_radio = 4 * np.pi * (CATID_luminosity_distances**2) * 1 / ( (1+CATID_redshifts)** (1+alpha_spectral_index) ) * radio_fluxes  # in W
+
+    return L_radio
 
 def SFR_Halpha_ho03(reduced_SAMI_spectra_table_hdu, CATID_redshifts):
     """
@@ -990,9 +1022,14 @@ def get_closest_galaxy_match(summary_table, input_CATID, possible_CATIDs, mass_c
     return closest_match_CATID, min_diff
 
 
-def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, mass_colname='M_STAR', SFR_colname='SFR_SAMI', log_scale=False):
+def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, 
+                                mass_colname='M_STAR', SFR_colname='SFR_SAMI', log_scale=False, 
+                                distribution_plots=False, figsize=(10, 6), xlabels=('log M_STAR [M$_\\odot$]', 'log SFR [M$_\\odot$ yr$^{-1}$]'), 
+                                mass_bins=np.linspace(9,12,20), SFR_bins = np.linspace(-3, 2, 20), labels=('Matched Galaxies', 'Input Galaxies'),
+                                scatter_plot=False, point_size=2):
     """
-    Matches each galaxy in set A to one in set B, minimizing a cost function based on mass and SFR.
+    Matches each galaxy in set A to one in set B, minimizing a cost function based on mass and SFR. 
+    Optional plotting functionality, for distribution comparison of input and matched galaxies.
     """
 
 
@@ -1016,6 +1053,48 @@ def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs, ma
 
     for i, j in zip(indices_A, indices_B):
         matched_galaxies_table.add_row((input_CATIDs[i], possible_CATIDs[j], cost_matrix[i, j]))
+
+
+    if distribution_plots:
+        fig, axs = plt.subplots(1, 2, figsize=figsize)
+        axs =axs.flatten()
+        axs[0].set(title=f'Mass Distribution of {labels[0]} and {labels[1]}', xlabel=xlabels[0], ylabel='Count')
+        axs[0].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Matched_CATID'])][mass_colname], bins=mass_bins, alpha=0.5, label=labels[0])
+        axs[0].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Input_CATID'])][mass_colname], bins=mass_bins, alpha=0.5, label=labels[1])
+        axs[0].legend()
+
+        axs[1].set(title=f'SFR Distribution of {labels[0]} and {labels[1]}', xlabel=xlabels[1], ylabel='Count')
+        axs[1].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Matched_CATID'])][SFR_colname], bins=SFR_bins, alpha=0.5, label=labels[0])
+        axs[1].hist(summary_table[np.isin(summary_table['CATID'], matched_galaxies_table['Input_CATID'])][SFR_colname], bins=SFR_bins, alpha=0.5, label=labels[1])
+        axs[1].legend()
+
+        plt.tight_layout()
+        plt.show()
+    
+    if scatter_plot:
+        fig2, axs2 = plt.subplots(1, 1, figsize=figsize)
+        axs2.set(title=f'Mass vs SFR of {labels[0]} and {labels[1]}', xlabel=xlabels[0], ylabel=xlabels[1])
+        axs2.scatter(summary_table[np.isin(summary_table['CATID'], input_CATIDs)][mass_colname],
+                        summary_table[np.isin(summary_table['CATID'], input_CATIDs)][SFR_colname], 
+                        label=labels[1], s=point_size)
+        
+        axs2.scatter(summary_table[np.isin(summary_table['CATID'], possible_CATIDs)][mass_colname],
+                        summary_table[np.isin(summary_table['CATID'], possible_CATIDs)][SFR_colname], 
+                        label=labels[0], s=point_size)
+
+        axs2.legend()
+
+        for row in matched_galaxies_table:
+            input_CATID = row['Input_CATID']
+            matched_CATID = row['Matched_CATID']
+            axs2.plot([summary_table[summary_table['CATID'] == input_CATID][mass_colname][0],
+                          summary_table[summary_table['CATID'] == matched_CATID][mass_colname][0]],
+                         [summary_table[summary_table['CATID'] == input_CATID][SFR_colname][0],
+                          summary_table[summary_table['CATID'] == matched_CATID][SFR_colname][0]], 
+                         'k-', linewidth=0.5)
+
+        plt.tight_layout()
+        plt.show()
 
     return matched_galaxies_table
 
