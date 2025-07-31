@@ -41,13 +41,55 @@ OPAL_USER = "mspa4681@uni.sydney.edu.au"
 # Folder location with all SAMI cubes:
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
+# Location of SAMI AGN Summary Catalogue
+AGN_Summary_path = "SAMI_AGN_matches.fits"
+
+# some emission/absorption lines to plot:
+spectra_features_dict = {'$H\\alpha$': 6564.61, '$H\\beta$':4862.68, '$NII$': 6549.86, '$OIII$': 5008.240, '$SII$': 6718.29}
+
+
 ###############################################################
 def plot_line_lam(ax,z):
 
     """Plot location of main emission and abs lines at redshift
     of current object."""
+    
+    # get ylims
+    ymin, ymax = ax.set_ylim()
+    yrange = ymax - ymin
+
+    h=0.1
+    z=0
+    # Ha
+    Ha_lam = (1+z) * 6564.61
+    ax.axvline(Ha_lam, color='grey', zorder=-1)
+    ax.text(Ha_lam+10, h*yrange+ymin, '$H\\alpha$')
+    
+    # Hb
+    Hb_lam = (1+z) * 4862.68
+    ax.axvline(Hb_lam, color='grey', zorder=-1)
+    ax.text(Hb_lam+10, h*yrange+ymin, '$H\\beta$')
+    
+    # NII
+    NII_lam = (1+z) * 6549.86
+    ax.axvline(NII_lam, color='grey', zorder=-1)
+    ax.text(NII_lam-90, h*yrange+ymin, '$NII$')
+    
+    # OIII
+    OIII_lam = (1+z) * 5008.24
+    ax.axvline(OIII_lam, color='grey', zorder=-1)
+    ax.text(OIII_lam+10, h*yrange+ymin, '$OIII$')
+    
+    # SII
+    SII_lam = (1+z) * 6718.29
+    ax.axvline(SII_lam, color='grey', zorder=-1)
+    ax.text(SII_lam+10, h*yrange+ymin, '$SII$')
 
     
+    
+    return None
+    
+
     
 
 ###############################################################
@@ -195,7 +237,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
 
 ###############################################################
 
-def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None):
+def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None, redshift=None, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None):
 
     """Make a summary plot of all the main data from DR3, much like a single
     object viewer.  Assumes the format of DR3."""
@@ -212,13 +254,18 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     py.rcParams.update({'figure.autolayout': True})
     # this to get sans-serif latex maths:
     py.rcParams['text.latex.preamble'] = r'\usepackage{helvet} \usepackage{sansmath} \sansmath'               # <- tricky! -- gotta actually tell tex to use!
-  
 
 
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
+    
     # set up pdf plotting:
+    if save_folder==None:
+        pdf_path = os.path.join('dr3_sov_pdfs', f'dr3_sov_{catid}.pdf')
+    else:
+        pdf_path = os.path.join(save_folder, f'dr3_sov_{catid}.pdf')
+        
     if (dopdf):
-        pdf = PdfPages(f'dr3_sov_pdfs/dr3_sov_{catid}.pdf')
+        pdf = PdfPages(pdf_path)
 
     # set up grid:
     fig1 = py.figure(1,constrained_layout=True)
@@ -283,6 +330,19 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
     ax1.set(ylabel='Flux',xlabel='Wavelength (\AA)')
     #ax1.set(ylabel='Flux (1E-17 erg/cm$^2$/s/Ang)')
+    
+    ax1_ylims = ax1.set_ylim()
+
+   
+    # add some spectral line indicators
+    if redshift == None: # first get the redshift
+        AGN_summary_table = fits.open(AGN_Summary_path)[1].data
+        redshift = AGN_summary_table['Z_SPEC'][AGN_summary_table['CATID'] == catid]
+    
+    plot_line_lam(ax1, redshift)
+
+        
+        
     
     # download large SDSS RGB:
     large_image_scale = 30
@@ -520,6 +580,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     if (dopdf):
     	py.savefig(pdf, format='pdf')
     	pdf.close()
+    	
+    	print(f"{catid} dr3 sov saved to: {pdf_path}")
 
     
 ############################################################################

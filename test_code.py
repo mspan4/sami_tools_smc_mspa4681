@@ -59,13 +59,13 @@ import cube_fctns
 bin = 'default'
 catid = 9011900430
 
-'''
+
 haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
 print(fits.open(haflux_file).info())
 
 hdulist = fits.open(AGN_Summary_path)
 tab = hdulist[1].data
-'''
+
 
 
 '''
@@ -101,8 +101,10 @@ plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'ma
 
 
 #catid = 9011900430 # highest flux radio source
-#plot_tools.plot_dr3_sov(catid, isradio=True)
+#plot_tools.plot_dr3_sov(catid, isradio=False)
 
+
+'''
 filename = "shared_catalogues/gassig_statistics.fits"
 gassig_statistics = fits.open(filename)
 gassig_table = gassig_statistics[1].data
@@ -111,7 +113,7 @@ mask = gassig_table['MEDIAN_VEL_DISP'] > 400
 relevant_CATIDs = gassig_table['CATID'][mask]
 
 plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name='high_gassig_many_sov.pdf', radio_sources=False)
-
+'''
 
 '''
 relevant_CATIDs = [30615, 214250, 273336, 508132, 9011900034, 9011900137,
@@ -121,5 +123,11 @@ plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name='high_
 '''
 
 
-catid = 6821
+catid = 41274
+plot_tools.plot_sov_many_new(AGN_Summary_path, [catid], radio_sources=False,
+save_name='test_many_sov.pdf')
+
 #plot_tools.plot_dr3_sov(catid, isradio=False)
+
+
+
