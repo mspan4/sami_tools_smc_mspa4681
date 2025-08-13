@@ -9,7 +9,7 @@ OPAL_USER = "mspa4681@uni.sydney.edu.au"
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
 # Location of SAMI AGN Summary Catalogue
-AGN_Summary_path = "SAMI_AGN_matches.fits"
+AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 #############################################################
 
@@ -59,4 +59,5 @@ plot_tools.plot_sov_many_new(AGN_Summary_path,
     do_printstatement=True,
     save_name=dr3_sov_savefile,
     **clean_kwargs)
+
 
