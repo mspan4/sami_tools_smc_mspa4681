@@ -59,7 +59,7 @@ def plot_line_lam(ax,z):
     yrange = ymax - ymin
 
     h=0.1
-    z=0
+    #z=0
     # Ha
     Ha_lam = (1+z) * 6564.61
     ax.axvline(Ha_lam, color='grey', zorder=-1)
@@ -143,10 +143,11 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False):
+def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None):
     """
     Plot many SOV plots, reading list from the Matched AGN FITS file
     """
+
 
     # get casda credentials if needed (only if isradio)
     if radio_sources:
@@ -188,7 +189,14 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
 
 
-    pdf = PdfPages(f"dr3_sov_pdfs/{save_name}")
+    # set up pdf plotting:
+    if save_folder==None:
+        pdf_path = os.path.join('dr3_sov_pdfs', save_name)
+    else:
+        pdf_path = os.path.join(save_folder, save_name)
+        
+    pdf = PdfPages(pdf_path)
+        
 
     n = 0
     for catid in catids:
@@ -221,7 +229,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         if (catid == 203609):
             usebin = 'default'
             
-        plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n])
+        plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n], redshift=redshift[n], do_printstatement=do_printstatement)
 
         py.draw()
         # pause for input if plotting all the spectra:

@@ -22,10 +22,7 @@ parser.add_argument("catid", type=int, help="Galaxy CATID to process")
 # Optional arguments
 parser.add_argument("--bin", type=str, help="Binning type")
 parser.add_argument("--snlim", type=float, help="S/N limit")
-parser.add_argument("--label", type=str, help="Label for output")
-parser.add_argument("--isradio", action='store_true', help="Flag if source is radio")
-parser.add_argument("--casda", type=str, help="CASDA ID")
-parser.add_argument("--redshift", type=float, help="Redshift of source")
+parser.add_argument("--radio_sources", action='store_true', help="Flag if source is radio")
 parser.add_argument("--OPAL_USER", type=str, help="OPAL user login")
 parser.add_argument("--save_folder", type=str, help="Output folder")
 
@@ -44,20 +41,22 @@ if args.catid not in catids:
 
 kwargs = {"bin": args.bin,
     "snlim": args.snlim,
-    "label": args.label,
-    "isradio": args.isradio,
-    "casda": args.casda,
-    "redshift": args.redshift,
+    "radio_sources": args.radio_sources,
     "OPAL_USER": args.OPAL_USER,
     "save_folder": args.save_folder}
+
     
+
 # Remove keys where the value is None so they don't ruin default function values
 clean_kwargs = {k: v for k, v in kwargs.items() if v is not None}
 
+dr3_sov_savefile = f'dr3_sov_{args.catid}.pdf'
 
-plot_tools.plot_dr3_sov(
-    args.catid,
+#def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None):
+
+plot_tools.plot_sov_many_new(AGN_Summary_path, 
+    specific_catids=[args.catid],
     do_printstatement=True,
-    dopdf=True,
+    save_name=dr3_sov_savefile,
     **clean_kwargs)
 
