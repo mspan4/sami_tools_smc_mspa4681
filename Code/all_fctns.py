@@ -836,31 +836,36 @@ def get_luminosity_distance(redshifts, desired_units=u.m):
 
 def get_z_best(catalogues_filepath, CATIDs):
     """
-    Returns the best available redshift for given CATIDs from the Input catalogues.
+    Returns table of the best available redshift for given CATIDs from the Input catalogues.
     Uses z_tonry For the GAMA catalogue, and z_spec for Clusters and FIller.
     """
     SAMI_Target_catalogues = ("InputCatGAMADR3.fits", "InputCatClustersDR3.fits", "InputCatFiller.fits")
 
-    z_spec_array = np.full(len(CATIDs), np.nan)  # Initialize with NaN
+    z_spec_table= Table(names=['CATID', 'Z_SPEC'])  # Initialize with NaN
 
     for SAMI_Target_catalogue in SAMI_Target_catalogues:
         with fits.open(catalogues_filepath + SAMI_Target_catalogue) as hdul:
             catalogue_table = Table(hdul[1].data)
             catalogue_CATIDs = catalogue_table['CATID']
-            
-            # Use z_tonry for GAMA catalogue, otherwise use z_spec
-            if SAMI_Target_catalogue == "InputCatGAMADR3.fits":
-                catalogue_z_spec = catalogue_table['z_tonry']
-            else:
-                catalogue_z_spec = catalogue_table['z_spec']
+            relevant_CATIDs = CATIDs[np.isin(CATIDs, catalogue_CATIDs)]
 
-        # Find indices of matching CATIDs
-        matching_indices = np.isin(CATIDs, catalogue_CATIDs)
+            for CATID in relevant_CATIDs:
+                # Use z_tonry for GAMA catalogue, otherwise use z_spec
+                if SAMI_Target_catalogue == "InputCatGAMADR3.fits":
+                    z_spec = catalogue_table[catalogue_table['CATID'] == CATID]['z_tonry']
+                else:
+                    z_spec = catalogue_table[catalogue_table['CATID'] == CATID]['z_spec']
 
-        # Update z_spec_array for matching CATIDs
-        z_spec_array[matching_indices] = catalogue_z_spec[np.isin(catalogue_CATIDs, CATIDs[matching_indices])]
+                # add row to z_spec_table
+                z_spec_table.add_row({'CATID': CATID, 'Z_SPEC': z_spec})
 
-    return z_spec_array
+    # add rows for CATIDs not in any catalogue with NaN values
+    for CATID in CATIDs:
+        if CATID not in z_spec_table['CATID']:
+            z_spec_table.add_row({'CATID': CATID, 'Z_SPEC': np.nan})
+
+
+    return z_spec_table
 
 
 
@@ -890,10 +895,16 @@ def get_SFRs(catalogue_filepath, SAMI_AGN_summary_table, SAMI_SFR_table_hdu, rel
 
 
     #get the redshift for each CATID:
-    CATID_redshifts = get_z_best(catalogue_filepath, reduced_SAMI_AGN_summary_table['CATID'])     #first get the redshift for each CATID
+    CATID_redshifts_table = get_z_best(catalogue_filepath, reduced_SAMI_AGN_summary_table['CATID'])     #first get the redshift for each CATID
 
-    # add temporary CATID_redshifts column to the reduced summary table
-    reduced_SAMI_AGN_summary_table.add_column(astropy.table.Column(CATID_redshifts, name='CATID_redshifts'))
+
+    # check if already redshift column exists, if so, rename it to CATID_redshifts
+    if 'Z_SPEC' in reduced_SAMI_AGN_summary_table.colnames:
+        reduced_SAMI_AGN_summary_table.rename_column('Z_SPEC', 'CATID_redshifts')
+    else:
+        # if not, then we need to add the redshifts from the CATID_redshifts_table
+        reduced_SAMI_AGN_summary_table = join(reduced_SAMI_AGN_summary_table, CATID_redshifts_table, 'CATID', join_type='left')
+        reduced_SAMI_AGN_summary_table.rename_column('Z_SPEC', 'CATID_redshifts')
 
 
     if SAMI_SFR_table_type == 'SFR':
