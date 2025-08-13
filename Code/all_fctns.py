@@ -841,7 +841,7 @@ def get_z_best(catalogues_filepath, CATIDs):
     """
     SAMI_Target_catalogues = ("InputCatGAMADR3.fits", "InputCatClustersDR3.fits", "InputCatFiller.fits")
 
-    z_spec_table= Table(names=['CATID', 'Z_SPEC'])  # Initialize with NaN
+    z_spec_table= Table(names=['CATID', 'Z_SPEC'], dtype=[int, float])  # Initialize with NaN
 
     for SAMI_Target_catalogue in SAMI_Target_catalogues:
         with fits.open(catalogues_filepath + SAMI_Target_catalogue) as hdul:
