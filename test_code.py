@@ -47,7 +47,7 @@ import astropy.units as u
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
 # Location of SAMI AGN Summary Catalogue
-AGN_Summary_path = "SAMI_AGN_matches.fits"
+AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 # CASDA OPAL username to access RACS data:
 OPAL_USER = "mspa4681@uni.sydney.edu.au"
@@ -60,12 +60,16 @@ bin = 'default'
 catid = 9011900430
 
 
-haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
-print(fits.open(haflux_file).info())
+#haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
+#print(fits.open(haflux_file).info())
 
 hdulist = fits.open(AGN_Summary_path)
 tab = hdulist[1].data
 
+catids = tab['CATID'][tab['CATEGORY_BPT_AGN'] == 6]
+#catids = tab['CATID'][tab['IS_BROADLINE_AGN'] == 1]
+plot_tools.plot_sov_many_new(AGN_Summary_path, catids, radio_sources=False,
+save_name='many_sov_LINER.pdf')
 
 
 '''
@@ -123,9 +127,7 @@ plot_tools.plot_sov_many_new(AGN_Summary_path, relevant_CATIDs, save_name='high_
 '''
 
 
-catid = 41274
-plot_tools.plot_sov_many_new(AGN_Summary_path, [catid], radio_sources=False,
-save_name='test_many_sov.pdf')
+
 
 #plot_tools.plot_dr3_sov(catid, isradio=False)
 

@@ -241,6 +241,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         n=n+1
         
     pdf.close()
+    print(f"Many SOV PDF saved to: {pdf_path}")
      
 
 ###############################################################
