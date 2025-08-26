@@ -75,7 +75,7 @@ def ka03_ke06_Seyfert_LINER_formula(xbpt, metal):
 k06_AGN_formula = lambda xbpt: -1.701*xbpt - 2.163
 k06_Seyfert_LINER_formula = lambda xbpt: 1*xbpt +0.7
 
-def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1], 'S II': [-2, 0.5], 'O I': [-2.5, 0.5]}, plot_ylims = [-2.5,1.5], AGN_cutoffs= True):
+def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1], 'S II': [-2, 0.5], 'O I': [-2.5, 0.5]}, plot_ylims = [-2.5,1.5], AGN_cutoffs= True, region_labels=True):
         # x limits to stop log from changing sign and div by 0
     kewley_xlims = {'N II': 0.47, 'S II': 0.31, 'O I': -0.59} 
     kauffman_xlims = [-1.28, 0.05]
@@ -104,10 +104,11 @@ def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1],
 
 
         fontsize = 20
-        ax.text(-0.5, 1.2, 'Seyferts', size = fontsize)
-        ax.text(0.35, -1.5, 'LINERs', size=fontsize)
-        ax.text(-0.1, -2.2, 'Comp', size=fontsize)
-        ax.text(-1.2, -0.7, 'H II', size=fontsize)
+        if region_labels == True:
+            ax.text(-0.5, 1.2, 'Seyferts', size = fontsize)
+            ax.text(0.35, -1.5, 'LINERs', size=fontsize)
+            ax.text(-0.1, -2.2, 'Comp', size=fontsize)
+            ax.text(-1.2, -0.7, 'H II', size=fontsize)
 
     if AGN_cutoffs: # shade AGN cutoff regions
         # AGN cutoff regions
@@ -119,7 +120,7 @@ def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1],
         ax.fill_betweenx([plot_ylims[0], k01_OIII_Hb_AGN_bound], k01_metal_Ha_AGN_bounds[metal], plot_xlims[metal][1], color='grey', alpha=0.2)
 
 
-    ax.set(xlim=plot_xlims[metal], ylim=plot_ylims,xlabel=f'$log( [{metal}]/[H \\alpha] )$',ylabel='$Log( [OIII]/[H \\beta] )$')
+    ax.set(xlim=plot_xlims[metal], ylim=plot_ylims,xlabel=f'log ([{metal.replace(" ", "")}]/H$\\alpha$)',ylabel='log ([OIII]/H$\\beta$)')
     ax.grid()
 
     if have_legend:
@@ -1085,13 +1086,13 @@ def get_multiple_galaxy_matches(summary_table, input_CATIDs, possible_CATIDs,
     if scatter_plot:
         fig2, axs2 = plt.subplots(1, 1, figsize=figsize)
         axs2.set(title=f'Mass vs SFR of {labels[0]} and {labels[1]}', xlabel=xlabels[0], ylabel=xlabels[1])
-        axs2.scatter(summary_table[np.isin(summary_table['CATID'], input_CATIDs)][mass_colname],
-                        summary_table[np.isin(summary_table['CATID'], input_CATIDs)][SFR_colname], 
-                        label=labels[1], s=point_size)
         
         axs2.scatter(summary_table[np.isin(summary_table['CATID'], possible_CATIDs)][mass_colname],
                         summary_table[np.isin(summary_table['CATID'], possible_CATIDs)][SFR_colname], 
                         label=labels[0], s=point_size)
+        axs2.scatter(summary_table[np.isin(summary_table['CATID'], input_CATIDs)][mass_colname],
+                        summary_table[np.isin(summary_table['CATID'], input_CATIDs)][SFR_colname], 
+                        label=labels[1], s=point_size)
 
         axs2.legend()
 
