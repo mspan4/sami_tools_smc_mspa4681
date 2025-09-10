@@ -31,45 +31,43 @@ def k03_bpt_formula(xbpt):
 ############################################################################
 # plot Kewley 2001 BPT line:
 def k01_bpt_formula(xbpt, metal='N II'):
-    match metal:
-        case 'N II':
-            ybpt = 0.61/(xbpt-0.47) + 1.19
-            ybpt[xbpt>0.47] = -np.inf
+    if metal== 'N II':
+        ybpt = 0.61/(xbpt-0.47) + 1.19
+        ybpt[xbpt>0.47] = -np.inf
 
-        case 'S II':
-            ybpt = 0.72/(xbpt-0.31) + 1.30
-            ybpt[xbpt>0.31] = -np.inf
+    elif metal== 'S II':
+        ybpt = 0.72/(xbpt-0.31) + 1.30
+        ybpt[xbpt>0.31] = -np.inf
 
 
-        case 'O I':
-            ybpt = 0.73/(xbpt+0.59) + 1.33
-            ybpt[xbpt>-0.59] = -np.inf
+    elif metal== 'O I':
+        ybpt = 0.73/(xbpt+0.59) + 1.33
+        ybpt[xbpt>-0.59] = -np.inf
 
         
-        case _:
-            print("Not a valid metal type")
-            raise(TypeError)
+    else:
+        print("Not a valid metal type")
+        raise(TypeError)
 
     return ybpt
 
 #getting AGN/LINER seperation line
 def ka03_ke06_Seyfert_LINER_formula(xbpt, metal):
-    match metal:
-        case 'N II':
-            start_coords = [-0.45, -0.5]
-            gradient = np.tan(65 *np.pi/180)
+    if metal== 'N II':
+        start_coords = [-0.45, -0.5]
+        gradient = np.tan(65 *np.pi/180)
 
-            ybpt = gradient*(xbpt-start_coords[0]) + start_coords[1]
-        
-        case 'S II':
-            ybpt = 1.89*xbpt + 0.76
+        ybpt = gradient*(xbpt-start_coords[0]) + start_coords[1]
+    
+    elif metal== 'S II':
+        ybpt = 1.89*xbpt + 0.76
 
-        case 'O I':
-            ybpt = 1.18*xbpt + 1.30
-        
-        case _:
-            print("Not a valid metal type")
-            raise(TypeError)
+    elif metal== 'O I':
+        ybpt = 1.18*xbpt + 1.30
+    
+    else:
+        print("Not a valid metal type")
+        raise(TypeError)
     return ybpt
 
 k06_AGN_formula = lambda xbpt: -1.701*xbpt - 2.163
@@ -841,9 +839,9 @@ def get_z_best(catalogues_filepath, CATIDs):
     Uses z_tonry For the GAMA catalogue, and z_spec for Clusters and FIller.
     """
     SAMI_Target_catalogues = ("InputCatGAMADR3.fits", "InputCatClustersDR3.fits", "InputCatFiller.fits")
+    CATIDs = np.array(CATIDs)
 
     z_spec_table= Table(names=['CATID', 'Z_SPEC'], dtype=[int, float])  # Initialize with NaN
-
     for SAMI_Target_catalogue in SAMI_Target_catalogues:
         with fits.open(catalogues_filepath + SAMI_Target_catalogue) as hdul:
             catalogue_table = Table(hdul[1].data)
@@ -865,6 +863,9 @@ def get_z_best(catalogues_filepath, CATIDs):
         if CATID not in z_spec_table['CATID']:
             z_spec_table.add_row({'CATID': CATID, 'Z_SPEC': np.nan})
 
+    # if only 1 CATID, return a single value instead of a table
+    if len(z_spec_table) == 1:
+        return z_spec_table['Z_SPEC'][0]
 
     return z_spec_table
 
