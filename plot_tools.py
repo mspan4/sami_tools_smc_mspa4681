@@ -52,7 +52,7 @@ spectra_features_dict = {'$H\\alpha$': 6564.61, '$H\\beta$':4862.68, '$NII$': 65
 def plot_line_lam(ax,z):
 
     """Plot location of main emission and abs lines at redshift
-    of current object."""
+    of current object. (http://astronomy.nmsu.edu/drewski/tableofemissionlines.html)"""
     
     # get ylims
     ymin, ymax = ax.set_ylim()
@@ -61,29 +61,38 @@ def plot_line_lam(ax,z):
     h=0.1
     #z=0
     # Ha
-    Ha_lam = (1+z) * 6564.61
+    Ha_lam = (1+z) * 6562.819
     ax.axvline(Ha_lam, color='grey', zorder=-1)
-    ax.text(Ha_lam+10, h*yrange+ymin, '$H\\alpha$')
+    ax.text(Ha_lam-90, h*yrange+ymin, '$H\\alpha$')
     
     # Hb
-    Hb_lam = (1+z) * 4862.68
+    Hb_lam = (1+z) * 4861.333
     ax.axvline(Hb_lam, color='grey', zorder=-1)
-    ax.text(Hb_lam+10, h*yrange+ymin, '$H\\beta$')
+    ax.text(Hb_lam-90, h*yrange+ymin, '$H\\beta$')
     
     # NII
-    NII_lam = (1+z) * 6549.86
-    ax.axvline(NII_lam, color='grey', zorder=-1)
-    ax.text(NII_lam-90, h*yrange+ymin, '$NII$')
+    NII_lam1 = (1+z) * 6548.050
+    ax.axvline(NII_lam1, color='grey', zorder=-1, linestyle='--')
+    #ax.text(NII_lam1-90, h*yrange+ymin, '$NII$')
+    
+    NII_lam2 = (1+z) * 6583.50
+    ax.axvline(NII_lam2, color='grey', zorder=-1)
+    ax.text(NII_lam2+10, h*yrange+ymin, '$NII$')
+    
     
     # OIII
-    OIII_lam = (1+z) * 5008.24
+    OIII_lam = (1+z) * 5006.843
     ax.axvline(OIII_lam, color='grey', zorder=-1)
     ax.text(OIII_lam+10, h*yrange+ymin, '$OIII$')
     
     # SII
-    SII_lam = (1+z) * 6718.29
-    ax.axvline(SII_lam, color='grey', zorder=-1)
-    ax.text(SII_lam+10, h*yrange+ymin, '$SII$')
+    SII_lam1 = (1+z) * 6716.29
+    ax.axvline(SII_lam1, color='grey', zorder=-1)
+    ax.text(SII_lam1+10, h*yrange+ymin, '$SII$')
+    
+    SII_lam2 = (1+z) * 6730.810
+    ax.axvline(SII_lam2, color='grey', zorder=-1)
+    #ax.text(SII_lam2+10, h*yrange+ymin, '$SII$')
 
     
     
