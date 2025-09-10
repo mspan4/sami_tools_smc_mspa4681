@@ -295,7 +295,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     hdulist.close()
     hdulist = fits.open(apspecfile_red)
     sami_flux_red,sami_lam_red = sami_read_apspec(hdulist,0,doareacorr=False)
-    print(sami_flux_red)
+    
     hdulist.close()
 
     # read SDSS spectrum, if available:
