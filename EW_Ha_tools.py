@@ -95,7 +95,14 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
         sami_lam_red_zcorr = sami_lam_red / (1 + redshift)
 
     else: # only other possible case is that spectra_filepath is provided
-        sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, spectra_filepath)
+            # read in the spectra
+        try:
+            sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, spectra_filepath)
+        except FileNotFoundError:
+            print(f"No valid red spectra found for {CATID}")
+            return np.nan, np.nan
+            
+
 
     # now estimate the continuum flux
     if estimation_method == 'median': # two regions, median of both, midpoint of those is the continuum flux error from std of regions
@@ -108,11 +115,8 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
             region_flux_errs[i] = np.std(sami_flux_red[region_mask])
 
         continuum_flux = np.mean(region_fluxes)
-        continuum_flux_err = np.sqrt(np.sum(region_flux_errs**2)) / 2
-        print(continuum_flux_err)
-
         continuum_flux_err = continuum_flux * np.sqrt(np.sum( (region_flux_errs/region_fluxes)**2 )) #
-        print(continuum_flux_err)
+
 
     elif estimation_method == 'linefit': #linear fit to the two regions, evaluate at Ha_lam to get continuum flux, error from fit errors
         # get the relevant points for line fitting
@@ -157,10 +161,18 @@ def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_pat
 
     
     HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
+    
+    # use the first value only and check if there is an actual value
+    try:
+        HAlpha_flux = HAlpha_flux[0]
+        HAlpha_error = HAlpha_error[0]
+    except IndexError:
+        HAlpha_flux = np.nan
+        HAlpha_error = np.nan
+            
 
     # get the continuum flux
-    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), ifs_path, estimation_method=estimation_method, 
-                                                            sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
+    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
 
     # calculate the EW
     Ha_EW = HAlpha_flux / continuum_flux
@@ -203,5 +215,3 @@ def get_Halpha_EW_table(CATIDs, catalogue_filepath=catalogue_filepath, ifs_path=
         Ha_EW_table.add_row([CATID, Ha_EW_medianfit, Ha_EW_medianfit_err, Ha_EW_linefit, Ha_EW_linefit_err])
         
     return Ha_EW_table
-
-get_Halpha_EW_table(CATIDs)
