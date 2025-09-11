@@ -833,7 +833,7 @@ def get_luminosity_distance(redshifts, desired_units=u.m):
     return cosmo.luminosity_distance(redshifts * cu.redshift).to(u.m)
 
 
-def get_z_best(catalogues_filepath, CATIDs):
+def get_z_best(catalogues_filepath, CATIDs, only_spec=False):
     """
     Returns table of the best available redshift for given CATIDs from the Input catalogues.
     Uses z_tonry For the GAMA catalogue, and z_spec for Clusters and FIller.
@@ -850,7 +850,7 @@ def get_z_best(catalogues_filepath, CATIDs):
 
             for CATID in relevant_CATIDs:
                 # Use z_tonry for GAMA catalogue, otherwise use z_spec
-                if SAMI_Target_catalogue == "InputCatGAMADR3.fits":
+                if SAMI_Target_catalogue == "InputCatGAMADR3.fits" and not only_spec:
                     z_spec = catalogue_table[catalogue_table['CATID'] == CATID]['z_tonry']
                 else:
                     z_spec = catalogue_table[catalogue_table['CATID'] == CATID]['z_spec']
