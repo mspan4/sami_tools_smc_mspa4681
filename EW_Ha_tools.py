@@ -248,7 +248,7 @@ def read_cube(cubefile):
     hdu.close()
 
     (zs,ys,xs) = flux.shape
-    print('The shape of the cube: ',zs,ys,xs)
+    #print('The shape of the cube: ',zs,ys,xs)
 
     return lam, flux, variance
 
@@ -264,7 +264,7 @@ def get_Halpha_EW_spectra_investigation_plot(sami_flux_red, sami_lam_red_zcorr, 
     Ha_lam = 6562.819
     region1 = np.array([-region_width, 0]) + Ha_lam - region_separation/2  
     region2 = np.array([0, region_width]) + Ha_lam + region_separation/2  
-    print(region1, region2)
+    #print(region1, region2)
 
     # plot these regions
     ax.axvspan(region1[0], region1[1], color='grey', alpha=0.3, linestyle='--')

@@ -18,6 +18,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from dr_tools.sami_fluxcal import sami_read_apspec
 from dr_tools.sami_utils import spectres
 from racs_cutout_tools import get_racs_image_cutout
+import EW_Ha_tools
 
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
@@ -282,10 +283,15 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
     
     # set up pdf plotting:
-    if save_folder==None:
-        pdf_path = os.path.join('dr3_sov_pdfs', f'dr3_sov_{catid}.pdf')
+    if advanced:
+        save_name = f'dr3_sov_{catid}_advanced.pdf'
     else:
-        pdf_path = os.path.join(save_folder, f'dr3_sov_{catid}.pdf')
+        save_name = f'dr3_sov_{catid}.pdf'
+    
+    if save_folder==None:
+        pdf_path = os.path.join('dr3_sov_pdfs', save_name)
+    else:
+        pdf_path = os.path.join(save_folder, save_name)
         
     if (dopdf):
         pdf = PdfPages(pdf_path)
@@ -333,17 +339,25 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         ax_image_small = fig1.add_subplot(gs[1,2])
         ax_stelflux = fig1.add_subplot(gs[1,3])
         
+        ax_bpt = fig1.add_subplot(gs[1,4])
+        
         # row 2
         ax_stelvel = fig1.add_subplot(gs[2,0])
         ax_stelsig = fig1.add_subplot(gs[2,1])
         ax_gasvel = fig1.add_subplot(gs[2,2])
         ax_gassig = fig1.add_subplot(gs[2,3])
         
+        #ax_
+        
+        
         # row 3
         ax_haflux = fig1.add_subplot(gs[3,0])
         ax_n2ha = fig1.add_subplot(gs[3,1])
         ax_o3hb = fig1.add_subplot(gs[3,2])
-        ax_bpt = fig1.add_subplot(gs[3,3])
+        
+        ax_ha_ew = fig1.add_subplot(gs[3,3])
+        ax_whan = fig1.add_subplot(gs[3,4])
+
 
     # first set up aperture spectrum plot:
     #axspectra = fig1.add_subplot(gs[0,:])
@@ -648,6 +662,56 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     fig1.colorbar(im_bpt, cax=axins_bpt, orientation="horizontal")
 
     ax_bpt.set(xlim=[-1.5,0.5],ylim=[-1.2,1.5],xlabel='log([NII]/Ha)',ylabel='log([OIII]/Hb)')
+    
+    
+    ax_ha_ew.set_aspect('equal', 'box')
+
+    ha_ew, ha_ew_err= EW_Ha_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
+
+    ha_ewsn = ha_ew / ha_ew_err
+    ha_ew_snflag = np.where((ha_ewsn > snlim),0,1)
+    ha_ew_masked = np.ma.masked_array(ha_ew,(ha_ew_snflag>0))
+
+    vmin = np.log10( np.nanpercentile(ha_ew,5.0) )
+    vmax = np.log10(np.nanpercentile(ha_ew,95.0))
+
+
+    im_ha_ew = ax_ha_ew.imshow(np.log10(ha_ew_masked),origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_ha_ew = inset_axes(ax_ha_ew,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_ha_ew, cax=axins_ha_ew, orientation="horizontal")
+    ax_ha_ew.text(0.05, 0.05,'log(EW(Ha))', horizontalalignment='left',verticalalignment='center', transform=ax_ha_ew.transAxes)
+    fig1.show()
+
+
+
+    # plot WHaN diagram
+    snflag = np.where(((hasn > snlim) & (n2sn > snlim) & (ha_ewsn > snlim)),0,1)
+                
+    ha_ew_masked = np.ma.masked_array(ha_ew,(snflag>0))
+    n2ha_masked = np.ma.masked_array(n2ha,(snflag>0))
+
+    # set up grid to get distance from centre (in arcsec):
+    x = y = np.arange(0.0,50.0,1.0)
+    X, Y = np.meshgrid(x, y)
+    xcent = 25.0
+    ycent = 25.0
+    rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
+
+    # ax_whan = fig1.add_subplot(gs[3,4])
+
+    im_whan = ax_whan.scatter(n2ha_masked,np.log10(ha_ew_masked),c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
+    ax_whan.text(0.05, 0.05,'WHAN vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_whan.transAxes)
+    ax_whan.xaxis.labelpad=0
+    ax_whan.yaxis.labelpad=0
+
+
+
+    axins_whan = inset_axes(ax_whan,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_whan, cax=axins_whan, orientation="horizontal")
+
+    ax_whan.set(xlim=[-1.5,0.9],ylim=[-1.2,3],xlabel='log([NII]/Ha)',ylabel='log(EW(Ha))')
+    # plot WHAN lines:
+    EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False)
     
 
 
