@@ -71,8 +71,8 @@ def plot_line_lam(ax,z):
     ax.text(Hb_lam-90, h*yrange+ymin, '$H\\beta$')
     
     # NII
-    NII_lam1 = (1+z) * 6548.050
-    ax.axvline(NII_lam1, color='grey', zorder=-1, linestyle='--')
+    #NII_lam1 = (1+z) * 6548.050
+    #ax.axvline(NII_lam1, color='grey', zorder=-1, linestyle='--')
     #ax.text(NII_lam1-90, h*yrange+ymin, '$NII$')
     
     NII_lam2 = (1+z) * 6583.50
@@ -152,7 +152,7 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None):
+def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False):
     """
     Plot many SOV plots, reading list from the Matched AGN FITS file
     """
@@ -196,6 +196,10 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     bpt_classification = tab['CATEGORY_BPT_AGN']
     xrayflux = tab['eROSITA_TOTALFLUX_1'] # from eROSITA
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
+    
+    
+    if advanced:
+        save_name = save_name[:-4] +"_advanced.pdf"
 
 
     # set up pdf plotting:
@@ -238,7 +242,8 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         if (catid == 203609):
             usebin = 'default'
             
-        plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n], redshift=redshift[n], do_printstatement=do_printstatement)
+        plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n], redshift=redshift[n], do_printstatement=do_printstatement,
+        advanced=advanced)
 
         py.draw()
         # pause for input if plotting all the spectra:
@@ -255,7 +260,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
 
 ###############################################################
 
-def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None, redshift=None, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None):
+def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None, redshift=None, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False):
 
     """Make a summary plot of all the main data from DR3, much like a single
     object viewer.  Assumes the format of DR3."""
@@ -288,10 +293,60 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     # set up grid:
     fig1 = py.figure(1,constrained_layout=True)
     fig1.clf()
-    gs = fig1.add_gridspec(4, 4,wspace=0.3,hspace=0.3,top=0.95,bottom=0.1)
+    
+    
+    if not advanced:
+        gs = fig1.add_gridspec(4, 4,wspace=0.3,hspace=0.3,top=0.95,bottom=0.1)
+        
+        # row 0
+        axspectra = fig1.add_subplot(gs[0,:])
+        
+        # row 1
+        ax_image_large = fig1.add_subplot(gs[1,0])
+        ax_image = fig1.add_subplot(gs[1,1])
+        ax_image_small = fig1.add_subplot(gs[1,2])
+        ax_stelflux = fig1.add_subplot(gs[1,3])
+        
+        # row 2
+        ax_stelvel = fig1.add_subplot(gs[2,0])
+        ax_stelsig = fig1.add_subplot(gs[2,1])
+        ax_gasvel = fig1.add_subplot(gs[2,2])
+        ax_gassig = fig1.add_subplot(gs[2,3])
+        
+        # row 3
+        ax_haflux = fig1.add_subplot(gs[3,0])
+        ax_n2ha = fig1.add_subplot(gs[3,1])
+        ax_o3hb = fig1.add_subplot(gs[3,2])
+        ax_bpt = fig1.add_subplot(gs[3,3])
+    
+    
+    else: # advanced == True
+        gs = fig1.add_gridspec(4, 5,wspace=0.3,hspace=0.3,top=0.95,bottom=0.1)
+        axspectra = fig1.add_subplot(gs[0,:])
+        
+        # row 0
+        axspectra = fig1.add_subplot(gs[0,:])
+        
+        # row 1
+        ax_image_large = fig1.add_subplot(gs[1,0])
+        ax_image = fig1.add_subplot(gs[1,1])
+        ax_image_small = fig1.add_subplot(gs[1,2])
+        ax_stelflux = fig1.add_subplot(gs[1,3])
+        
+        # row 2
+        ax_stelvel = fig1.add_subplot(gs[2,0])
+        ax_stelsig = fig1.add_subplot(gs[2,1])
+        ax_gasvel = fig1.add_subplot(gs[2,2])
+        ax_gassig = fig1.add_subplot(gs[2,3])
+        
+        # row 3
+        ax_haflux = fig1.add_subplot(gs[3,0])
+        ax_n2ha = fig1.add_subplot(gs[3,1])
+        ax_o3hb = fig1.add_subplot(gs[3,2])
+        ax_bpt = fig1.add_subplot(gs[3,3])
 
     # first set up aperture spectrum plot:
-    ax1 = fig1.add_subplot(gs[0,:])
+    #axspectra = fig1.add_subplot(gs[0,:])
 
     # read aperture spectrum:
     apspecfile_blue = os.path.join(ifs_path, str(catid),str(catid)+'_A_spectrum_3-arcsec_blue.fits')
@@ -332,25 +387,25 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         
 
         hdulist.close()
-        ax1.plot(sdss_lam_air,sdss_flux,color='k',label='SDSS scaled')
+        axspectra.plot(sdss_lam_air,sdss_flux,color='k',label='SDSS scaled')
         
         print(nsdss)
     
-    ax1.plot(sami_lam_blue,sami_flux_blue,color='b',label='SAMI blue arm')
-    ax1.plot(sami_lam_red,sami_flux_red,color='r',label='SAMI red arm')
-    ax1.set(xlim=[3700.0,7500.0])
-    ax1.text(0.05, 0.9,str(catid),fontsize=10,horizontalalignment='left',verticalalignment='center', transform=ax1.transAxes)
+    axspectra.plot(sami_lam_blue,sami_flux_blue,color='b',label='SAMI blue arm')
+    axspectra.plot(sami_lam_red,sami_flux_red,color='r',label='SAMI red arm')
+    axspectra.set(xlim=[3700.0,7500.0])
+    axspectra.text(0.05, 0.9,str(catid),fontsize=10,horizontalalignment='left',verticalalignment='center', transform=axspectra.transAxes)
     if (label != None):
         
-        ax1.set_title(label,fontsize=10)
+        axspectra.set_title(label,fontsize=10)
     
-    ax1.xaxis.labelpad=0
-    #ax1.legend()
+    axspectra.xaxis.labelpad=0
+    #axspectra.legend()
 
-    ax1.set(ylabel='Flux',xlabel='Wavelength (\AA)')
-    #ax1.set(ylabel='Flux (1E-17 erg/cm$^2$/s/Ang)')
+    axspectra.set(ylabel='Flux',xlabel='Wavelength (\AA)')
+    #axspectra.set(ylabel='Flux (1E-17 erg/cm$^2$/s/Ang)')
     
-    ax1_ylims = ax1.set_ylim()
+    axspectra_ylims = axspectra.set_ylim()
 
    
     # add some spectral line indicators
@@ -358,7 +413,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         AGN_summary_table = fits.open(AGN_Summary_path)[1].data
         redshift = AGN_summary_table['Z_SPEC'][AGN_summary_table['CATID'] == catid]
     
-    plot_line_lam(ax1, redshift)
+    plot_line_lam(axspectra, redshift)
 
         
         
@@ -374,12 +429,12 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     url = cutoutbaseurl + '?' + query_string
     
     # this downloads the image to your disk
-    urlretrieve(url, 'SDSS_cutout.jpg')
-    image = Image.open('SDSS_cutout.jpg')
+    urlretrieve(url, 'SDSS_cutout_large.jpg')
+    image = Image.open('SDSS_cutout_large.jpg')
 
-    ax21 = fig1.add_subplot(gs[1,0])
-    ax21.imshow(np.flipud(image),origin='lower',interpolation='nearest')
-    ax21.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax21.transAxes)
+    #ax_image_large = fig1.add_subplot(gs[1,0])
+    ax_image_large.imshow(np.flipud(image),origin='lower',interpolation='nearest')
+    ax_image_large.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax_image_large.transAxes)
 
     # download SDSS RGB:
     medium_image_scale = 3
@@ -395,9 +450,9 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     urlretrieve(url, 'SDSS_cutout.jpg')
     image = Image.open('SDSS_cutout.jpg')
 
-    ax22 = fig1.add_subplot(gs[1,1])
-    ax22.imshow(np.flipud(image),origin='lower',interpolation='nearest')
-    ax22.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax22.transAxes)
+    #ax_image = fig1.add_subplot(gs[1,1])
+    ax_image.imshow(np.flipud(image),origin='lower',interpolation='nearest')
+    ax_image.text(0.05, 0.05,'SDSS',color='w',horizontalalignment='left',verticalalignment='center', transform=ax_image.transAxes)
 
     # download SDSS RGB of same size as SAMI IFU:
     impix = 50
@@ -412,9 +467,9 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     urlretrieve(url, 'SDSS_cutout_small.jpg')
     image = Image.open('SDSS_cutout_small.jpg')
 
-    ax23 = fig1.add_subplot(gs[1,2])
-    ax23.imshow(np.flipud(image),origin='lower',interpolation='nearest')
-    ax23.text(0.05, 0.05,'SDSS zoom',color='w',horizontalalignment='left',verticalalignment='center', transform=ax23.transAxes)
+    #ax_image_small = fig1.add_subplot(gs[1,2])
+    ax_image_small.imshow(np.flipud(image),origin='lower',interpolation='nearest')
+    ax_image_small.text(0.05, 0.05,'SDSS zoom',color='w',horizontalalignment='left',verticalalignment='center', transform=ax_image_small.transAxes)
 
     #image.show()
     
@@ -428,7 +483,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax21.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax_image_large.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
         
         
         impix = medium_image_scale * 50
@@ -437,7 +492,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax22.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax_image.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
         # again for same size as SAMI IFU:
@@ -448,41 +503,41 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         image = fits.open(cutout_file)[0].data.squeeze()
         
-        ax23.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        ax_image_small.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
 
 
-    ax24 = fig1.add_subplot(gs[1,3])
+    #ax_stelflux = fig1.add_subplot(gs[1,3])
 
     # velocity fields:
-    ax31 = fig1.add_subplot(gs[2,0])
-    ax31.set_aspect('equal', 'box')
+    #ax_stelvel = fig1.add_subplot(gs[2,0])
+    ax_stelvel.set_aspect('equal', 'box')
     stelvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity_'+bin+'_two-moment.fits')
     stelvel = fits.getdata(stelvel_file, ext=0)
     stelflux = fits.getdata(stelvel_file, extname='FLUX')
     vmin = -150.0
     vmax=150.0
-    im31 = ax31.imshow(stelvel,origin='lower',interpolation='nearest',cmap=py.cm.RdYlBu_r,vmin=vmin,vmax=vmax)
-    axins31 = inset_axes(ax31,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im31, cax=axins31, orientation="horizontal")
-    ax31.text(0.05, 0.05,'vel stel', horizontalalignment='left',verticalalignment='center', transform=ax31.transAxes)
+    im_stelvel = ax_stelvel.imshow(stelvel,origin='lower',interpolation='nearest',cmap=py.cm.RdYlBu_r,vmin=vmin,vmax=vmax)
+    axins_stelvel = inset_axes(ax_stelvel,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_stelvel, cax=axins_stelvel, orientation="horizontal")
+    ax_stelvel.text(0.05, 0.05,'vel stel', horizontalalignment='left',verticalalignment='center', transform=ax_stelvel.transAxes)
 
     # plot flux from SAMI:
-    im24 = ax24.imshow(stelflux,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=0.0,vmax=np.nanpercentile(stelflux,98.0))
-    axins24 = inset_axes(ax24,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im24, cax=axins24, orientation="horizontal")
-    ax24.text(0.05, 0.05,'flux stel', horizontalalignment='left',verticalalignment='center', transform=ax24.transAxes)
+    im_stelflux = ax_stelflux.imshow(stelflux,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=0.0,vmax=np.nanpercentile(stelflux,98.0))
+    axins_stelflux = inset_axes(ax_stelflux,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_stelflux, cax=axins_stelflux, orientation="horizontal")
+    ax_stelflux.text(0.05, 0.05,'flux stel', horizontalalignment='left',verticalalignment='center', transform=ax_stelflux.transAxes)
     
     # stellar sigma:
-    ax32 = fig1.add_subplot(gs[2,1])
-    ax32.set_aspect('equal', 'box')
+    #ax_stelsig = fig1.add_subplot(gs[2,1])
+    ax_stelsig.set_aspect('equal', 'box')
     stelsig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_stellar-velocity-dispersion_'+bin+'_two-moment.fits')
     stelsig = fits.getdata(stelsig_file, ext=0)
     vmin = 0.0
     vmax=np.nanpercentile(stelsig,95.0)
-    im32 = ax32.imshow(stelsig,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins32 = inset_axes(ax32,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im32, cax=axins32, orientation="horizontal")
-    ax32.text(0.05, 0.05,'sig stel', horizontalalignment='left',verticalalignment='center', transform=ax32.transAxes)
+    im_stelsig = ax_stelsig.imshow(stelsig,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_stelsig = inset_axes(ax_stelsig,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_stelsig, cax=axins_stelsig, orientation="horizontal")
+    ax_stelsig.text(0.05, 0.05,'sig stel', horizontalalignment='left',verticalalignment='center', transform=ax_stelsig.transAxes)
 
     # get Halpha early, so we can use it for S/N cuts:
     haflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Halpha_'+bin+'_1-comp.fits')
@@ -492,46 +547,46 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     ha_snflag = np.where((hasn > snlim),0,1)
 
     # gas velocity fields:
-    ax33 = fig1.add_subplot(gs[2,2])
-    ax33.set_aspect('equal', 'box')
+    #ax_gasvel = fig1.add_subplot(gs[2,2])
+    ax_gasvel.set_aspect('equal', 'box')
     gasvel_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-velocity_'+bin+'_1-comp.fits')
     gasvel = fits.getdata(gasvel_file, ext=0)[0,:,:]
     gasvel_masked = np.ma.masked_array(gasvel,(ha_snflag>0))
     vmin = -150.0
     vmax=150.0
-    im33 = ax33.imshow(gasvel_masked,origin='lower',interpolation='nearest',cmap=py.cm.RdYlBu_r,vmin=vmin,vmax=vmax)
-    axins33 = inset_axes(ax33,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im33, cax=axins33, orientation="horizontal")
-    ax33.text(0.05, 0.05,'vel gas', horizontalalignment='left',verticalalignment='center', transform=ax33.transAxes)
+    im_gasvel = ax_gasvel.imshow(gasvel_masked,origin='lower',interpolation='nearest',cmap=py.cm.RdYlBu_r,vmin=vmin,vmax=vmax)
+    axins_gasvel = inset_axes(ax_gasvel,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_gasvel, cax=axins_gasvel, orientation="horizontal")
+    ax_gasvel.text(0.05, 0.05,'vel gas', horizontalalignment='left',verticalalignment='center', transform=ax_gasvel.transAxes)
 
     
     # gas velocity dispersion fields:
-    ax34 = fig1.add_subplot(gs[2,3])
-    ax34.set_aspect('equal', 'box')
+    #ax_gassig = fig1.add_subplot(gs[2,3])
+    ax_gassig.set_aspect('equal', 'box')
     gassig_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_gas-vdisp_'+bin+'_1-comp.fits')
     gassig = fits.getdata(gassig_file, ext=0)[0,:,:]
     gassig_masked = np.ma.masked_array(gassig,(ha_snflag>0))
     vmin = 0.0
     vmax=np.nanpercentile(gassig,95.0)
-    im34 = ax34.imshow(gassig_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins34 = inset_axes(ax34,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im34, cax=axins34, orientation="horizontal")
-    ax34.text(0.05, 0.05,'sig gas', horizontalalignment='left',verticalalignment='center', transform=ax34.transAxes)
+    im_gassig = ax_gassig.imshow(gassig_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_gassig = inset_axes(ax_gassig,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_gassig, cax=axins_gassig, orientation="horizontal")
+    ax_gassig.text(0.05, 0.05,'sig gas', horizontalalignment='left',verticalalignment='center', transform=ax_gassig.transAxes)
 
     # line fluxes and ratios:
-    ax41 = fig1.add_subplot(gs[3,0])
-    ax41.set_aspect('equal', 'box')
+    #ax_haflux = fig1.add_subplot(gs[3,0])
+    ax_haflux.set_aspect('equal', 'box')
     haflux_masked = np.ma.masked_array(haflux,(ha_snflag>0))
     vmin = np.log10(np.nanpercentile(haflux,5.0))
     vmax=np.log10(np.nanpercentile(haflux,95.0))
-    im41 = ax41.imshow(np.log10(haflux_masked),origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins41 = inset_axes(ax41,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im41, cax=axins41, orientation="horizontal")
-    ax41.text(0.05, 0.05,'log(Ha)', horizontalalignment='left',verticalalignment='center', transform=ax41.transAxes)
+    im_haflux = ax_haflux.imshow(np.log10(haflux_masked),origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_haflux = inset_axes(ax_haflux,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_haflux, cax=axins_haflux, orientation="horizontal")
+    ax_haflux.text(0.05, 0.05,'log(Ha)', horizontalalignment='left',verticalalignment='center', transform=ax_haflux.transAxes)
 
     # NII/Ha
-    ax42 = fig1.add_subplot(gs[3,1])
-    ax42.set_aspect('equal', 'box')
+    #ax_n2ha = fig1.add_subplot(gs[3,1])
+    ax_n2ha.set_aspect('equal', 'box')
     n2flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_NII6583_'+bin+'_1-comp.fits')
     n2flux = fits.getdata(n2flux_file, ext=0)
     n2err =  fits.getdata(n2flux_file, extname='NII6583_ERR')
@@ -541,14 +596,14 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     n2ha_masked = np.ma.masked_array(n2ha,(n2ha_snflag>0))
     vmin = np.nanpercentile(n2ha,5.0)
     vmax=np.nanpercentile(n2ha,95.0)
-    im42 = ax42.imshow(n2ha_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins42 = inset_axes(ax42,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im42, cax=axins42, orientation="horizontal")
-    ax42.text(0.05, 0.05,'log([NII]/Ha)', horizontalalignment='left',verticalalignment='center', transform=ax42.transAxes)
+    im_n2ha = ax_n2ha.imshow(n2ha_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_n2ha = inset_axes(ax_n2ha,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_n2ha, cax=axins_n2ha, orientation="horizontal")
+    ax_n2ha.text(0.05, 0.05,'log([NII]/Ha)', horizontalalignment='left',verticalalignment='center', transform=ax_n2ha.transAxes)
 
     # get Hbeta and OIII:
-    ax43 = fig1.add_subplot(gs[3,2])
-    ax43.set_aspect('equal', 'box')
+    #ax_o3hb = fig1.add_subplot(gs[3,2])
+    ax_o3hb.set_aspect('equal', 'box')
     o3flux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_OIII5007_'+bin+'_1-comp.fits')
     o3flux = fits.getdata(o3flux_file, ext=0)
     o3err =  fits.getdata(o3flux_file, extname='OIII5007_ERR')
@@ -562,10 +617,10 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     o3hb_masked = np.ma.masked_array(o3hb,(o3hb_snflag>0))
     vmin = np.nanpercentile(o3hb,5.0)
     vmax=np.nanpercentile(o3hb,95.0)
-    im43 = ax43.imshow(o3hb_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins43 = inset_axes(ax43,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im43, cax=axins43, orientation="horizontal")
-    ax43.text(0.05, 0.05,'log([OIII]/Hb)', horizontalalignment='left',verticalalignment='center', transform=ax43.transAxes)
+    im_o3hb = ax_o3hb.imshow(o3hb_masked,origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+    axins_o3hb = inset_axes(ax_o3hb,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_o3hb, cax=axins_o3hb, orientation="horizontal")
+    ax_o3hb.text(0.05, 0.05,'log([OIII]/Hb)', horizontalalignment='left',verticalalignment='center', transform=ax_o3hb.transAxes)
     
     # plot BPT
     snflag = np.where(((hasn > snlim) & (hbsn > snlim) & (o3sn > snlim) & (n2sn > snlim)),0,1)
@@ -580,19 +635,19 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     ycent = 25.0
     rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
 
-    ax44 = fig1.add_subplot(gs[3,3])
-    im44 = ax44.scatter(n2ha_masked,o3hb_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
-    ax44.text(0.05, 0.05,'BPT vs radius', horizontalalignment='left',verticalalignment='center', transform=ax44.transAxes)
-    ax44.xaxis.labelpad=0
-    ax44.yaxis.labelpad=0
+    #ax_bpt = fig1.add_subplot(gs[3,3])
+    im_bpt = ax_bpt.scatter(n2ha_masked,o3hb_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
+    ax_bpt.text(0.05, 0.05,'BPT vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_bpt.transAxes)
+    ax_bpt.xaxis.labelpad=0
+    ax_bpt.yaxis.labelpad=0
     # plot Kauffmann line:
-    k03_bpt_line(colour='r',line=':')
-    k01_bpt_line(colour='g',line=':')
-    k03_bpt_Seyfert_LINER_line(colour='grey', line=':')
-    axins44 = inset_axes(ax44,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im44, cax=axins44, orientation="horizontal")
+    k03_bpt_line(ax_bpt, colour='r',line=':')
+    k01_bpt_line(ax_bpt, colour='g',line=':')
+    k03_bpt_Seyfert_LINER_line(ax_bpt, colour='grey', line=':')
+    axins_bpt = inset_axes(ax_bpt,width="90%",height="5%",loc='upper center')
+    fig1.colorbar(im_bpt, cax=axins_bpt, orientation="horizontal")
 
-    ax44.set(xlim=[-1.5,0.5],ylim=[-1.2,1.5],xlabel='log([NII]/Ha)',ylabel='log([OIII]/Hb)')
+    ax_bpt.set(xlim=[-1.5,0.5],ylim=[-1.2,1.5],xlabel='log([NII]/Ha)',ylabel='log([OIII]/Hb)')
     
 
 
@@ -605,22 +660,22 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     
 ############################################################################
 # plot Kauffmann BPT line:
-def k03_bpt_line(colour='r',line=':'):
+def k03_bpt_line(ax, colour='r',line=':'):
         xbpt = np.arange(-2.0,-0.1,0.01)
         ybpt = 0.61/(xbpt-0.05) + 1.3
-        py.plot(xbpt,ybpt,color=colour,linestyle=line)
+        ax.plot(xbpt,ybpt,color=colour,linestyle=line)
 
 ############################################################################
 # plot Kewley 2001 BPT line:
-def k01_bpt_line(colour='r',line=':'):
+def k01_bpt_line(ax, colour='r',line=':'):
         xbpt = np.arange(-2.0,0.3,0.01)
         ybpt = 0.61/(xbpt-0.47) + 1.19
-        py.plot(xbpt,ybpt,color=colour,linestyle=line)
+        ax.plot(xbpt,ybpt,color=colour,linestyle=line)
         
 ###########################################################################
 # plot Kauffmann Seyfert/LINER seperation line:      
-def k03_bpt_Seyfert_LINER_line(colour='r', line =':'):
+def k03_bpt_Seyfert_LINER_line(ax, colour='r', line =':'):
         xbpt = np.arange(-0.45, 0.5, 0.01)
         ybpt = np.tan(65 *np.pi/180) * (xbpt+0.45) - 0.5
-        py.plot(xbpt, ybpt, color=colour, linestyle=line)
+        ax.plot(xbpt, ybpt, color=colour, linestyle=line)
 
