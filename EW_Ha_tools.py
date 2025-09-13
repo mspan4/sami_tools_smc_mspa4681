@@ -135,7 +135,9 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
     return continuum_flux, continuum_flux_err
     
 
-def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', SAMI_spectra_table_hdu=None,  sami_flux_red=None, sami_lam_red=None, already_zcorr=False):
+def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', 
+                  SAMI_spectra_table_hdu=None,  sami_flux_red=None, sami_lam_red=None, already_zcorr=False, 
+                  HAlpha_flux=None, HAlpha_error=None):
     """Get the Halpha equivalent width for a given CATID in the 1.4 arcsec aperture.\\
     Two continuum estimation methods implemented: 'median' and 'linefit'.\\
     This function can take in a pre-loaded SAMI_spectra_table (EmissionLine1compDR3.fits) to avoid re-loading the catalogue for each CATID.\\
@@ -151,29 +153,37 @@ def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_pat
     region2 = np.array([0, region_width]) + Ha_lam + region_separation/2  
 
 
-    # read in the emission line catalogue if not provided
-    if SAMI_spectra_table_hdu is None:
-        SAMI_spectra_catalogue = "EmissionLine1compDR3.fits"
-        with fits.open( os.path.join(catalogue_filepath + SAMI_spectra_catalogue) ) as SAMI_spectra_hdul:
-            SAMI_spectra_table_hdu = Table(SAMI_spectra_hdul[1].data)
-    else:
-        SAMI_spectra_table_hdu = SAMI_spectra_table_hdu
+    # check if HAlpha_flux and HAlpha_error are provided
+    if HAlpha_flux is not None and HAlpha_error is not None:
+        HAlpha_flux = HAlpha_flux
+        HAlpha_error = HAlpha_error
 
-    
-    HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
-    
-    # use the first value only and check if there is an actual value
-    try:
-        HAlpha_flux = HAlpha_flux[0]
-        HAlpha_error = HAlpha_error[0]
-    except IndexError:
-        HAlpha_flux = np.nan
-        HAlpha_error = np.nan
-            
+    else:
+        # read in the emission line catalogue if not provided
+        if SAMI_spectra_table_hdu is None:
+            SAMI_spectra_catalogue = "EmissionLine1compDR3.fits"
+            with fits.open( os.path.join(catalogue_filepath + SAMI_spectra_catalogue) ) as SAMI_spectra_hdul:
+                SAMI_spectra_table_hdu = Table(SAMI_spectra_hdul[1].data)
+        else:
+            SAMI_spectra_table_hdu = SAMI_spectra_table_hdu
+
+        
+        HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
+        
+        # use the first value only and check if there is an actual value
+        try:
+            HAlpha_flux = HAlpha_flux[0]
+            HAlpha_error = HAlpha_error[0]
+        except IndexError:
+            HAlpha_flux = np.nan
+            HAlpha_error = np.nan
+
+    # print(f"Halpha flux: {HAlpha_flux} +/- {HAlpha_error}")
 
     # get the continuum flux
     continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
 
+    # print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
     # calculate the EW
     Ha_EW = HAlpha_flux / continuum_flux
     Ha_EW_err = Ha_EW * np.sqrt((HAlpha_error / HAlpha_flux)**2 + (continuum_flux_err / continuum_flux)**2)
@@ -208,10 +218,109 @@ def get_Halpha_EW_table(CATIDs, catalogue_filepath=catalogue_filepath, ifs_path=
     for CATID in CATIDs:
         HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
 
-        Ha_EW_medianfit, Ha_EW_medianfit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu)
-        Ha_EW_linefit, Ha_EW_linefit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='linefit', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu)
+        Ha_EW_medianfit, Ha_EW_medianfit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, HAlpha_flux=HAlpha_flux, HAlpha_error=HAlpha_error)
+        Ha_EW_linefit, Ha_EW_linefit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='linefit', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, HAlpha_flux=HAlpha_flux, HAlpha_error=HAlpha_error)
         # add row to table
 
         Ha_EW_table.add_row([CATID, Ha_EW_medianfit, Ha_EW_medianfit_err, Ha_EW_linefit, Ha_EW_linefit_err])
         
     return Ha_EW_table
+
+def read_cube(cubefile):
+
+    hdu = fits.open(cubefile)
+    primary_header=hdu['PRIMARY'].header
+    print(primary_header)
+    
+    # Get the information needed to create the wavelength array
+    crval3=primary_header['CRVAL3']
+    cdelt3=primary_header['CDELT3']
+    crpix3=primary_header['CRPIX3']
+    naxis3=primary_header['NAXIS3']
+    
+    x=np.arange(naxis3)+1
+    L0=crval3-crpix3*cdelt3       
+    lam=L0+x*cdelt3 # wavelengths array
+
+    flux = hdu[0].data # flux array
+    variance = hdu['VARIANCE'].data # variance array
+
+    hdu.close()
+
+    (zs,ys,xs) = flux.shape
+    print('The shape of the cube: ',zs,ys,xs)
+
+    return lam, flux, variance
+
+
+def get_Halpha_EW_spectra_investigation_plot(sami_flux_red, sami_lam_red_zcorr, HAlpha_flux, HAlpha_error, region_plot=True):
+    """Basic setup to investigate the spectra and continuum fitting around Halpha for a given CATID.
+    Just made for quick debugging and visualisation.
+    """
+    fig, ax = py.subplots(1,1, figsize=(7,4))
+    # set regions for collecting continuum flux symmetric about 6562
+    region_width = 65
+    region_separation = 140
+    Ha_lam = 6562.819
+    region1 = np.array([-region_width, 0]) + Ha_lam - region_separation/2  
+    region2 = np.array([0, region_width]) + Ha_lam + region_separation/2  
+    print(region1, region2)
+
+    # plot these regions
+    ax.axvspan(region1[0], region1[1], color='grey', alpha=0.3, linestyle='--')
+    ax.axvspan(region2[0], region2[1], color='grey', alpha=0.3, linestyle='--')
+
+
+    # plot the spectra:
+    ax.plot(sami_lam_red_zcorr, sami_flux_red)
+    # plot_line_lam(ax, z=0, annotations=False)
+
+    # ax.set_title(f"SAMI ID: {test_CATID}")
+    ax.set_xlabel(r"Wavelength ($\AA$)")
+    ax.set_xlim(6400,6700)
+
+    py.show()
+
+    if region_plot:
+        fig1, ax1 = py.subplots(1,1, figsize=(7,4))
+        region_mask =( (sami_lam_red_zcorr >= region1[0]) & (sami_lam_red_zcorr <= region1[1]) ) | ( (sami_lam_red_zcorr >= region2[0]) & (sami_lam_red_zcorr <= region2[1]) )
+        ax1.scatter(sami_lam_red_zcorr[region_mask], sami_flux_red[region_mask])
+        ax1.set_xlabel(r"Wavelength ($\AA$)")
+        ax1.set_xlim(6400,6700)
+
+        continuum_flux, continuum_flux_err = get_continuum_flux(1, (region1, region2), estimation_method='linefit', sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red_zcorr, already_zcorr=True)
+
+        ax1.errorbar(Ha_lam, continuum_flux, yerr=continuum_flux_err, color='orange', fmt='.', label='Continuum flux at $H\\alpha$', capsize=3)
+        py.show()
+
+    return 
+
+
+def plot_WHAN_lines(ax, paper='Cid Fernandes et al. (2011)', region_labels=True, fontsize=15):
+    xrange = ax.get_xlim()
+    yrange = ax.get_ylim()
+
+    xs = np.linspace(xrange[0], xrange[1], 1000)
+
+    if paper == 'Cid Fernandes et al. (2011)':
+        m_line = (np.log10(5)-np.log10(0.5))/(-1-0)
+        c_line = np.log10(0.5)
+
+        # uncertain lines
+        ax.plot(xs[xs<0], m_line*xs[xs<0] + c_line, 'k:')
+        ax.plot([0, xrange[1]], [np.log10(0.5)]*2, 'k:')
+
+        # passive galaxy lines
+        ax.plot(xs[xs>0], m_line*xs[xs>0] + c_line, 'k--')
+        ax.plot([xrange[0], 0], [np.log10(0.5)]*2, 'k--')
+
+        ax.plot([-0.4, xrange[1]], [np.log10(6)]*2, color='k') # K06 Seyfert/LINER line
+        ax.axvline(-0.4, color='k') # S06 SF/AGN line
+
+        if region_labels:
+            ax.text(0.2, 1.5, 'Seyferts', size=fontsize)
+            ax.text(0.4, 0.5, 'LINERs', size=fontsize)
+            ax.text(-0.9, 1.9, 'SF', size=fontsize)
+            ax.text(-0.3, -0.8, 'Passive galaxies', size=fontsize)
+
+    return ax
