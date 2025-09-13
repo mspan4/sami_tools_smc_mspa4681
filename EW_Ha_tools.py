@@ -324,3 +324,64 @@ def plot_WHAN_lines(ax, paper='Cid Fernandes et al. (2011)', region_labels=True,
             ax.text(-0.3, -0.8, 'Passive galaxies', size=fontsize)
 
     return ax
+
+
+
+def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', haflux_masked=None, haerr=None, ha_SN_lim=3, redshift_spec=None, bin='default'):
+    """Get the Halpha EW at each spaxel in the cube.
+    Can take in a pre-masked Halpha flux array to avoid re-calculating the mask.
+    Can take in a specific estimation method (e.g., 'median', 'mean') for the EW calculation.
+
+    Returns Ha_EW_image, Ha_EW_err_image
+    """
+
+    # first read in the cube - check that this is alwats catid_A
+    lam, flux, variance = read_cube(os.path.join(ifs_path, str(catid), f"{catid}_A_cube_red.fits.gz"))
+
+    # redshift correct the wavelength array
+    if redshift_spec is None:
+        redshift_spec = all_fctns.get_z_best(catalogue_filepath, [catid], only_spec=True)
+    
+    lam = lam / (1 + redshift_spec)
+    
+
+
+    if haflux_masked is None:
+        # copied from scotts original dr3_sov code:
+        haflux_file = os.path.join(ifs_path, str(catid),str(catid)+'_A_Halpha_'+bin+'_1-comp.fits')
+        haflux = fits.getdata(haflux_file, ext=0)[0,:,:]
+        haerr =  fits.getdata(haflux_file, extname='HALPHA_ERR')[0,:,:]
+        hasn = haflux/haerr
+        ha_snflag = np.where((hasn > ha_SN_lim),0,1)
+        haflux_masked = np.ma.masked_array(haflux,(ha_snflag>0))
+
+    HAlpha_EW_image = np.zeros(haflux_masked.shape)
+    HAlpha_EW_err_image = np.zeros(haflux_masked.shape)
+    counter = 0
+
+    # now iterate over each spaxel
+    for i in range(haflux_masked.shape[0]):
+        for j in range(haflux_masked.shape[1]):
+            # if not (i in (16,17,18,19,20,21) and (j in (16,17,18,19,20,21))):
+                # continue
+
+            if not haflux_masked.mask[i,j]:
+                # print(np.sum(~np.isnan(flux[:,i,j])))
+                HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_Halpha_EW(catid, ifs_path=ifs_path, estimation_method=estimation_method, 
+                                                                                sami_flux_red=flux[:,i,j], sami_lam_red=lam, already_zcorr=True,
+                                                                                HAlpha_flux=haflux_masked[i,j], HAlpha_error=haerr[i,j])
+            else:
+                HAlpha_EW_image[i,j] = np.nan
+                HAlpha_EW_err_image[i,j] = np.nan
+            
+            # print(f"Spaxel ({i},{j}): EW = {HAlpha_EW_image[i,j]}, EW_err = {HAlpha_EW_err_image[i,j]}")
+            # EW_Ha_tools.get_Halpha_EW_spectra_investigation_plot(flux[:,i,j], lam, haflux_masked[i,j], haerr[i,j])
+
+            if HAlpha_EW_image[i,j] > 0:
+                counter += 1
+                
+    # print(f"Counter: {counter}")
+
+    # print(np.sum(HAlpha_EW_image>0))
+
+    return HAlpha_EW_image, HAlpha_EW_err_image
