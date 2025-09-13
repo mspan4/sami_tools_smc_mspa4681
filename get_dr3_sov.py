@@ -25,6 +25,7 @@ parser.add_argument("--snlim", type=float, help="S/N limit")
 parser.add_argument("--radio_sources", action='store_true', help="Flag if source is radio")
 parser.add_argument("--OPAL_USER", type=str, help="OPAL user login")
 parser.add_argument("--save_folder", type=str, help="Output folder")
+parser.add_argument("--advanced", action='store_true', help="Optional extra plots of EW(HA), WHAN and disperson v NII/Ha")
 
 args = parser.parse_args()
 
@@ -43,7 +44,8 @@ kwargs = {"bin": args.bin,
     "snlim": args.snlim,
     "radio_sources": args.radio_sources,
     "OPAL_USER": args.OPAL_USER,
-    "save_folder": args.save_folder}
+    "save_folder": args.save_folder,
+    "advanced": args.advanced}
 
     
 
