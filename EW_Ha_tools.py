@@ -230,7 +230,7 @@ def read_cube(cubefile):
 
     hdu = fits.open(cubefile)
     primary_header=hdu['PRIMARY'].header
-    print(primary_header)
+    # print(primary_header)
     
     # Get the information needed to create the wavelength array
     crval3=primary_header['CRVAL3']

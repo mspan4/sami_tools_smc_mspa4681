@@ -347,7 +347,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         ax_gasvel = fig1.add_subplot(gs[2,2])
         ax_gassig = fig1.add_subplot(gs[2,3])
         
-        #ax_
+        ax_gassign2ha = fig1.add_subplot(gs[2,4])
         
         
         # row 3
@@ -664,55 +664,83 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     ax_bpt.set(xlim=[-1.5,0.5],ylim=[-1.2,1.5],xlabel='log([NII]/Ha)',ylabel='log([OIII]/Hb)')
     
     
-    ax_ha_ew.set_aspect('equal', 'box')
+    if advanced:
+        ax_ha_ew.set_aspect('equal', 'box')
 
-    ha_ew, ha_ew_err= EW_Ha_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
+        ha_ew, ha_ew_err= EW_Ha_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
 
-    ha_ewsn = ha_ew / ha_ew_err
-    ha_ew_snflag = np.where((ha_ewsn > snlim),0,1)
-    ha_ew_masked = np.ma.masked_array(ha_ew,(ha_ew_snflag>0))
+        ha_ewsn = ha_ew / ha_ew_err
+        ha_ew_snflag = np.where((ha_ewsn > snlim),0,1)
+        ha_ew_masked = np.ma.masked_array(ha_ew,(ha_ew_snflag>0))
 
-    vmin = np.log10( np.nanpercentile(ha_ew,5.0) )
-    vmax = np.log10(np.nanpercentile(ha_ew,95.0))
-
-
-    im_ha_ew = ax_ha_ew.imshow(np.log10(ha_ew_masked),origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
-    axins_ha_ew = inset_axes(ax_ha_ew,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im_ha_ew, cax=axins_ha_ew, orientation="horizontal")
-    ax_ha_ew.text(0.05, 0.05,'log(EW(Ha))', horizontalalignment='left',verticalalignment='center', transform=ax_ha_ew.transAxes)
-    fig1.show()
+        vmin = np.log10( np.nanpercentile(ha_ew,5.0) )
+        vmax = np.log10(np.nanpercentile(ha_ew,95.0))
 
 
-
-    # plot WHaN diagram
-    snflag = np.where(((hasn > snlim) & (n2sn > snlim) & (ha_ewsn > snlim)),0,1)
-                
-    ha_ew_masked = np.ma.masked_array(ha_ew,(snflag>0))
-    n2ha_masked = np.ma.masked_array(n2ha,(snflag>0))
-
-    # set up grid to get distance from centre (in arcsec):
-    x = y = np.arange(0.0,50.0,1.0)
-    X, Y = np.meshgrid(x, y)
-    xcent = 25.0
-    ycent = 25.0
-    rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
-
-    # ax_whan = fig1.add_subplot(gs[3,4])
-
-    im_whan = ax_whan.scatter(n2ha_masked,np.log10(ha_ew_masked),c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
-    ax_whan.text(0.05, 0.05,'WHAN vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_whan.transAxes)
-    ax_whan.xaxis.labelpad=0
-    ax_whan.yaxis.labelpad=0
+        im_ha_ew = ax_ha_ew.imshow(np.log10(ha_ew_masked),origin='lower',interpolation='nearest',cmap=py.cm.YlOrRd,vmin=vmin,vmax=vmax)
+        axins_ha_ew = inset_axes(ax_ha_ew,width="90%",height="5%",loc='upper center')
+        fig1.colorbar(im_ha_ew, cax=axins_ha_ew, orientation="horizontal")
+        ax_ha_ew.text(0.05, 0.05,'log(EW(Ha))', horizontalalignment='left',verticalalignment='center', transform=ax_ha_ew.transAxes)
+        fig1.show()
 
 
 
-    axins_whan = inset_axes(ax_whan,width="90%",height="5%",loc='upper center')
-    fig1.colorbar(im_whan, cax=axins_whan, orientation="horizontal")
+        # plot WHaN diagram
+        snflag = np.where(((hasn > snlim) & (n2sn > snlim) & (ha_ewsn > snlim)),0,1)
+                    
+        ha_ew_masked = np.ma.masked_array(ha_ew,(snflag>0))
+        n2ha_masked = np.ma.masked_array(n2ha,(snflag>0))
 
-    ax_whan.set(xlim=[-1.5,0.9],ylim=[-1.2,3],xlabel='log([NII]/Ha)',ylabel='log(EW(Ha))')
-    # plot WHAN lines:
-    EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False)
-    
+        # set up grid to get distance from centre (in arcsec):
+        x = y = np.arange(0.0,50.0,1.0)
+        X, Y = np.meshgrid(x, y)
+        xcent = 25.0
+        ycent = 25.0
+        rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
+
+        # ax_whan = fig1.add_subplot(gs[3,4])
+
+        im_whan = ax_whan.scatter(n2ha_masked,np.log10(ha_ew_masked),c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
+        ax_whan.text(0.05, 0.05,'WHAN vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_whan.transAxes)
+        ax_whan.xaxis.labelpad=0
+        ax_whan.yaxis.labelpad=0
+
+
+
+        axins_whan = inset_axes(ax_whan,width="90%",height="5%",loc='upper center')
+        fig1.colorbar(im_whan, cax=axins_whan, orientation="horizontal")
+
+        ax_whan.set(xlim=[-1.5,0.9],ylim=[-1.2,3],xlabel='log([NII]/Ha)',ylabel='log(EW(Ha))')
+        # plot WHAN lines:
+        EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False)
+        
+        
+        # add dispersion v n2ha plot
+
+        snflag = np.where(((hasn > snlim) & (n2sn > snlim)),0,1)
+                    
+        gassig_masked = np.ma.masked_array(gassig,(snflag>0))
+        n2ha_masked = np.ma.masked_array(n2ha,(snflag>0))
+
+        # set up grid to get distance from centre (in arcsec):
+        x = y = np.arange(0.0,50.0,1.0)
+        X, Y = np.meshgrid(x, y)
+        xcent = 25.0
+        ycent = 25.0
+        rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
+
+        #ax_gassign2ha = fig1.add_subplot(gs[3,3])
+        im_gassign2ha = ax_gassign2ha.scatter(n2ha_masked,gassig_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow, s=1)
+        ax_gassign2ha.text(0.05, 0.05,'Shock plot vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_gassign2ha.transAxes)
+        ax_gassign2ha.xaxis.labelpad=0
+        ax_gassign2ha.yaxis.labelpad=0
+
+        axins_gassign2ha = inset_axes(ax_gassign2ha,width="90%",height="5%",loc='upper center')
+        fig1.colorbar(im_gassign2ha, cax=axins_gassign2ha, orientation="horizontal")
+
+        ax_gassign2ha.set(xlim=[-1.5,0.5],ylim=[0,260],xlabel='log([NII]/Ha)',ylabel='Velocity Disperson [km/s]')  
+        
+        
 
 
     if (dopdf):
