@@ -50,7 +50,7 @@ spectra_features_dict = {'$H\\alpha$': 6564.61, '$H\\beta$':4862.68, '$NII$': 65
 
 
 ###############################################################
-def plot_line_lam(ax,z):
+def plot_line_lam(ax,z, annotations=True):
 
     """Plot location of main emission and abs lines at redshift
     of current object. (http://astronomy.nmsu.edu/drewski/tableofemissionlines.html)"""
@@ -64,12 +64,14 @@ def plot_line_lam(ax,z):
     # Ha
     Ha_lam = (1+z) * 6562.819
     ax.axvline(Ha_lam, color='grey', zorder=-1)
-    ax.text(Ha_lam-90, h*yrange+ymin, '$H\\alpha$')
+    if annotations:
+        ax.text(Ha_lam-90, h*yrange+ymin, '$H\\alpha$')
     
     # Hb
     Hb_lam = (1+z) * 4861.333
     ax.axvline(Hb_lam, color='grey', zorder=-1)
-    ax.text(Hb_lam-90, h*yrange+ymin, '$H\\beta$')
+    if annotations:
+        ax.text(Hb_lam-90, h*yrange+ymin, '$H\\beta$')
     
     # NII
     #NII_lam1 = (1+z) * 6548.050
@@ -78,18 +80,21 @@ def plot_line_lam(ax,z):
     
     NII_lam2 = (1+z) * 6583.50
     ax.axvline(NII_lam2, color='grey', zorder=-1)
-    ax.text(NII_lam2+10, h*yrange+ymin, '$NII$')
+    if annotations:
+        ax.text(NII_lam2+10, h*yrange+ymin, '$NII$')
     
     
     # OIII
     OIII_lam = (1+z) * 5006.843
     ax.axvline(OIII_lam, color='grey', zorder=-1)
-    ax.text(OIII_lam+10, h*yrange+ymin, '$OIII$')
+    if annotations:
+        ax.text(OIII_lam+10, h*yrange+ymin, '$OIII$')
     
     # SII
     SII_lam1 = (1+z) * 6716.29
     ax.axvline(SII_lam1, color='grey', zorder=-1)
-    ax.text(SII_lam1+10, h*yrange+ymin, '$SII$')
+    if annotations:
+        ax.text(SII_lam1+10, h*yrange+ymin, '$SII$')
     
     SII_lam2 = (1+z) * 6730.810
     ax.axvline(SII_lam2, color='grey', zorder=-1)
@@ -170,16 +175,11 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     hdulist = fits.open(catfile)
     
     tab = hdulist[1].data
-    
-    if radio_sources:
-        isradio_ls = tab['IS_RADIOSOURCE']==1
-        if only_radio:
-            tab = tab[isradio_ls]
+   
+
+    if only_radio:
+        tab = tab[tab['IS_RADIOSOURCE']==1]
         
-    else:
-        isradio_ls = np.zeros(len(tab['IS_RADIOSOURCE']))
-
-
     if type(specific_catids) != str:
         tab = tab[np.isin(tab['CATID'], specific_catids)] # redefine tab to only include specific_catids
         
@@ -197,7 +197,12 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     bpt_classification = tab['CATEGORY_BPT_AGN']
     xrayflux = tab['eROSITA_TOTALFLUX_1'] # from eROSITA
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
+    if radio_sources:
+        isradio_ls = tab['IS_RADIOSOURCE']==1
     
+    else:
+        isradio_ls = np.zeros(len(tab['IS_RADIOSOURCE']))
+
     
     if advanced:
         save_name = save_name[:-4] +"_advanced.pdf"
@@ -243,6 +248,8 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         if (catid == 203609):
             usebin = 'default'
             
+
+            
         plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n], redshift=redshift[n], do_printstatement=do_printstatement,
         advanced=advanced)
 
@@ -281,6 +288,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
 
     py.subplots_adjust(hspace = 0.0, wspace = 0.0)
+    plot_pointsize = 3 # set the size of the points on the BPT, WHAN and gassig v n2ha plots
     
     # set up pdf plotting:
     if advanced:
@@ -327,8 +335,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     
     
     else: # advanced == True
-        gs = fig1.add_gridspec(4, 5,wspace=0.3,hspace=0.3,top=0.95,bottom=0.1)
-        axspectra = fig1.add_subplot(gs[0,:])
+        gs = fig1.add_gridspec(4, 5,wspace=0.3,hspace=0.3,top=0.95,bottom=0.1, left=0.05, right=0.95)
         
         # row 0
         axspectra = fig1.add_subplot(gs[0,:])
@@ -412,6 +419,13 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     if (label != None):
         
         axspectra.set_title(label,fontsize=10)
+        
+            # add some spectral line indicators
+    if redshift == None: # first get the redshift
+        AGN_summary_table = fits.open(AGN_Summary_path)[1].data
+        redshift = AGN_summary_table['Z_SPEC'][AGN_summary_table['CATID'] == catid]
+    
+    plot_line_lam(axspectra, redshift)
     
     axspectra.xaxis.labelpad=0
     #axspectra.legend()
@@ -421,16 +435,6 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     
     axspectra_ylims = axspectra.set_ylim()
 
-   
-    # add some spectral line indicators
-    if redshift == None: # first get the redshift
-        AGN_summary_table = fits.open(AGN_Summary_path)[1].data
-        redshift = AGN_summary_table['Z_SPEC'][AGN_summary_table['CATID'] == catid]
-    
-    plot_line_lam(axspectra, redshift)
-
-        
-        
     
     # download large SDSS RGB:
     large_image_scale = 30
@@ -498,6 +502,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax_image_large.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
+        
         
         
         impix = medium_image_scale * 50
@@ -650,7 +655,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
 
     #ax_bpt = fig1.add_subplot(gs[3,3])
-    im_bpt = ax_bpt.scatter(n2ha_masked,o3hb_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
+    im_bpt = ax_bpt.scatter(n2ha_masked,o3hb_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow, 
+    s=plot_pointsize)
     ax_bpt.text(0.05, 0.05,'BPT vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_bpt.transAxes)
     ax_bpt.xaxis.labelpad=0
     ax_bpt.yaxis.labelpad=0
@@ -700,7 +706,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         # ax_whan = fig1.add_subplot(gs[3,4])
 
-        im_whan = ax_whan.scatter(n2ha_masked,np.log10(ha_ew_masked),c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow)
+        im_whan = ax_whan.scatter(n2ha_masked,np.log10(ha_ew_masked),c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow, s=plot_pointsize)
         ax_whan.text(0.05, 0.05,'WHAN vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_whan.transAxes)
         ax_whan.xaxis.labelpad=0
         ax_whan.yaxis.labelpad=0
@@ -730,7 +736,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         rdist = np.sqrt((X-xcent)**2 + (Y-ycent)**2)/2.0
 
         #ax_gassign2ha = fig1.add_subplot(gs[3,3])
-        im_gassign2ha = ax_gassign2ha.scatter(n2ha_masked,gassig_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow, s=1)
+        im_gassign2ha = ax_gassign2ha.scatter(n2ha_masked,gassig_masked,c=rdist,marker='.',vmin=0.0,vmax=8.0,cmap=py.cm.rainbow, s=plot_pointsize)
         ax_gassign2ha.text(0.05, 0.05,'Shock plot vs radius', horizontalalignment='left',verticalalignment='center', transform=ax_gassign2ha.transAxes)
         ax_gassign2ha.xaxis.labelpad=0
         ax_gassign2ha.yaxis.labelpad=0

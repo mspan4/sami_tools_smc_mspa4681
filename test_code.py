@@ -47,7 +47,7 @@ import astropy.units as u
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
 # Location of SAMI AGN Summary Catalogue
-AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
+agn_summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 # CASDA OPAL username to access RACS data:
 OPAL_USER = "mspa4681@uni.sydney.edu.au"
@@ -58,18 +58,43 @@ from racs_cutout_tools import get_racs_image_cutout
 import cube_fctns
 bin = 'default'
 catid = 9011900430
-
+bpt_agn_labels = (6,7,8,9,10,-1)
 
 #haflux_file = cube_fctns.get_specific_cube_file(catid, 'gassig')
 #print(fits.open(haflux_file).info())
 
-hdulist = fits.open(AGN_Summary_path)
+hdulist = fits.open(agn_summary_path)
 tab = hdulist[1].data
 
+tab_mask = np.isin(tab['CATEGORY_BPT_AGN'], bpt_agn_labels)
+specific_catids = tab['CATID'][tab_mask]
+        
+
+plot_tools.plot_sov_many_new(agn_summary_path, 
+specific_catids= specific_catids, 
+save_name = 'many_sov_radio_AGNs.pdf', 
+bin='default', 
+radio_sources=True, 
+only_radio=True, 
+snlim=3.0, 
+OPAL_USER=OPAL_USER, 
+do_printstatement=True, 
+save_folder=None, 
+advanced=True)
+
+"""
 catids = tab['CATID'][tab['CATEGORY_BPT_AGN'] == 6]
 #catids = tab['CATID'][tab['IS_BROADLINE_AGN'] == 1]
-plot_tools.plot_sov_many_new(AGN_Summary_path, catids, radio_sources=False,
+plot_tools.plot_sov_many_new(agn_summary_path, catids, radio_sources=False,
 save_name='many_sov_LINER.pdf')
+"""
+
+
+
+
+
+
+
 
 
 '''
@@ -93,13 +118,6 @@ print(dec)
 #get_racs_image_cutout(ra, dec, imsize)
 
 
-'''
-BPT_AGN_labels = (6,7,8,9,10,-1)
-
-radio_AGN_catids = tab['CATID'][np.isin(tab['CATEGORY_BPT_AGN'], BPT_AGN_labels)]
-
-plot_tools.plot_sov_many_new(AGN_Summary_path, radio_AGN_catids, save_name = 'many_sov_radio_AGNs.pdf', only_radio=True)
-'''
 
 
 
