@@ -48,7 +48,7 @@ AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 
 
-def get_redshift_corrected_spectra(CATID, ifs_path=ifs_path):
+def get_redshift_corrected_spectra(CATID, ifs_path=ifs_path, catalogue_filepath=catalogue_filepath):
     apspecfile_red = os.path.join(ifs_path,str(CATID), str(CATID)+'_A_spectrum_1-4-arcsec_red.fits')
     hdulist = fits.open(apspecfile_red)
     sami_flux_red,sami_lam_red = sami_read_apspec(hdulist,0,doareacorr=False)
@@ -97,7 +97,7 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
     else: # only other possible case is that spectra_filepath is provided
             # read in the spectra
         try:
-            sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, spectra_filepath)
+            sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, ifs_path=spectra_filepath, catalogue_filepath=catalogue_filepath)
         except FileNotFoundError:
             print(f"No valid red spectra found for {CATID}")
             return np.nan, np.nan
@@ -181,7 +181,7 @@ def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_pat
     # print(f"Halpha flux: {HAlpha_flux} +/- {HAlpha_error}")
 
     # get the continuum flux
-    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
+    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), spectra_filepath=ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
 
     # print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
     # calculate the EW
