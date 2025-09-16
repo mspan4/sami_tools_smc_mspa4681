@@ -296,13 +296,13 @@ def get_Halpha_EW_spectra_investigation_plot(sami_flux_red, sami_lam_red_zcorr, 
     return 
 
 
-def plot_WHAN_lines(ax, paper='Cid Fernandes et al. (2011)', region_labels=True, fontsize=15):
+def plot_WHAN_lines(ax, paper='Fernandes (2011) - Seyfert/LINER', region_labels=True, fontsize=20):
     xrange = ax.get_xlim()
     yrange = ax.get_ylim()
 
     xs = np.linspace(xrange[0], xrange[1], 1000)
 
-    if paper == 'Cid Fernandes et al. (2011)':
+    if paper == 'Fernandes (2011) - Seyfert/LINER':
         m_line = (np.log10(5)-np.log10(0.5))/(-1-0)
         c_line = np.log10(0.5)
 
@@ -322,6 +322,33 @@ def plot_WHAN_lines(ax, paper='Cid Fernandes et al. (2011)', region_labels=True,
             ax.text(0.4, 0.5, 'LINERs', size=fontsize)
             ax.text(-0.9, 1.9, 'SF', size=fontsize)
             ax.text(-0.3, -0.8, 'Passive galaxies', size=fontsize)
+
+    elif paper == 'Fernandes (2011) - strong/weak':
+        m_line = (np.log10(5)-np.log10(0.5))/(-1-0)
+        c_line = np.log10(0.5)
+
+        # Radio galaxy lines
+        ax.plot([(np.log10(3)-c_line)/m_line, 0], [np.log10(3), np.log10(0.5)], 'k:')
+        # ax.plot(xs[xs<0], m_line*xs[xs<0] + c_line, 'k:')
+        ax.plot([0, xrange[1]], [np.log10(0.5)]*2, 'k:')
+
+        # # passive galaxy lines
+        ax.plot(xs[xs>0], m_line*xs[xs>0] + c_line, 'k--')
+        ax.plot([xrange[0], 0], [np.log10(0.5)]*2, 'k--')
+
+        ax.plot([xrange[0], xrange[1]], [np.log10(3)]*2, 'k--') # weak/radio line
+        ax.plot([-0.4, xrange[1]], [np.log10(6)]*2, color='k') # K06 Seyfert/LINER line - weak/strong line
+
+        ax.plot([-0.4]*2, [0.5, yrange[1]], 'k--') # S06 SF/AGN line
+
+
+        if region_labels:
+            ax.text(0.2, 1.5, 'sAGN', size=fontsize)
+            ax.text(0.45, 0.6, 'wAGN', size=fontsize)
+            ax.text(0.4, 0.1, 'RG', size=fontsize)
+            ax.text(-0.9, 1.9, 'SF', size=fontsize)
+            ax.text(-0.3, -0.8, 'Passive galaxies', size=fontsize)
+
 
     return ax
 
