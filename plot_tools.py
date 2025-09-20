@@ -18,7 +18,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from dr_tools.sami_fluxcal import sami_read_apspec
 from dr_tools.sami_utils import spectres
 from racs_cutout_tools import get_racs_image_cutout
-import EW_Ha_tools
+import EW_tools
 
 from urllib.parse import urlencode
 from urllib.request import urlretrieve
@@ -673,7 +673,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
     if advanced:
         ax_ha_ew.set_aspect('equal', 'box')
 
-        ha_ew, ha_ew_err= EW_Ha_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
+        ha_ew, ha_ew_err= EW_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
 
         ha_ewsn = ha_ew / ha_ew_err
         ha_ew_snflag = np.where((ha_ewsn > snlim),0,1)
@@ -718,7 +718,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         ax_whan.set(xlim=[-1.5,0.9],ylim=[-1.2,3],xlabel='log([NII]/Ha)',ylabel='log(EW(Ha))')
         # plot WHAN lines:
-        EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False, paper='Fernandes (2011) - strong/weak')
+        EW_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False, paper='Fernandes (2011) - strong/weak')
 
         
         # add dispersion v n2ha plot
