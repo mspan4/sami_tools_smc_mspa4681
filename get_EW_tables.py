@@ -51,7 +51,7 @@ AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 # Code to generate list
 CATIDs = fits.getdata(AGN_Summary_path)['CATID']
 
-Ha_EW_table = EW_tools.get_Halpha_EW_table(CATIDs)
+Ha_EW_table = EW_tools.get_EW_table(CATIDs)
 
 overwrite=True
 
@@ -60,8 +60,12 @@ git_Ha_EW_table_filepath = os.path.join("shared_catalogues", Ha_EW_table_filenam
 Ha_EW_table.write(git_Ha_EW_table_filepath , overwrite=overwrite)
 print(f"Summary Table Saved to: {git_Ha_EW_table_filepath}")
 
-    
+O3_EW_table = EW_tools.get_EW_table(CATIDs, em_line='O III')
 
+O3_EW_table_filename = f"O_III_EW_Table.fits"
+git_O3_EW_table_filepath = os.path.join("shared_catalogues", O3_EW_table_filename)
+O3_EW_table.write(git_O3_EW_table_filepath , overwrite=overwrite)
+print(f"Summary Table Saved to: {git_O3_EW_table_filepath}")
 
 
 

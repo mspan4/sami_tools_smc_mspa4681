@@ -139,7 +139,7 @@ def get_continuum_flux(CATID, regions, em_line = 'H Alpha', spectra_filepath=Non
     else:
         raise NotImplementedError("Only 'median' and 'linefit' estimation methods are implemented.")
     
-    print(f"CATID {CATID}: Continuum flux at {em_line} ({estimation_method}): {continuum_flux} +/- {continuum_flux_err}")
+    #print(f"CATID {CATID}: Continuum flux at {em_line} ({estimation_method}): {continuum_flux} +/- {continuum_flux_err}")
 
     return continuum_flux, continuum_flux_err
     
@@ -187,12 +187,12 @@ def get_EW(CATID, em_line='H Alpha', catalogue_filepath=catalogue_filepath, ifs_
         em_line_flux, em_line_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], em_line)
         
         # use the first value only and check if there is an actual value
-        try:
-            em_line_flux = em_line_flux[0]
-            em_line_error = em_line_error[0]
-        except IndexError:
-            em_line_flux = np.nan
-            em_line_error = np.nan
+    try:
+        em_line_flux = em_line_flux[0]
+        em_line_error = em_line_error[0]
+    except IndexError:
+        em_line_flux = np.nan
+        em_line_error = np.nan
 
     # print(f"Halpha flux: {HAlpha_flux} +/- {HAlpha_error}")
 
@@ -202,7 +202,8 @@ def get_EW(CATID, em_line='H Alpha', catalogue_filepath=catalogue_filepath, ifs_
     # calculate the EW
     em_line_EW = em_line_flux / continuum_flux
     em_line_EW_err = em_line_EW * np.sqrt((em_line_error / em_line_flux)**2 + (continuum_flux_err / continuum_flux)**2)
-
+    
+    #print(em_line_flux)
         
     return em_line_EW, em_line_EW_err
 
