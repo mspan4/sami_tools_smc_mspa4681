@@ -34,7 +34,7 @@ from astroquery.casda import Casda
 from astroquery.utils.tap.core import TapPlus
 
 import Code.all_fctns as all_fctns
-import EW_Ha_tools
+import EW_tools
 
 # CASDA OPAL username to access RACS data:
 OPAL_USER = "mspa4681@uni.sydney.edu.au"
@@ -51,7 +51,7 @@ AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 # Code to generate list
 CATIDs = fits.getdata(AGN_Summary_path)['CATID']
 
-Ha_EW_table = EW_Ha_tools.get_Halpha_EW_table(CATIDs)
+Ha_EW_table = EW_tools.get_Halpha_EW_table(CATIDs)
 
 overwrite=True
 

@@ -48,8 +48,8 @@ AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 
 
-def get_redshift_corrected_spectra(CATID, ifs_path=ifs_path, catalogue_filepath=catalogue_filepath):
-    apspecfile_red = os.path.join(ifs_path,str(CATID), str(CATID)+'_A_spectrum_1-4-arcsec_red.fits')
+def get_redshift_corrected_spectra(CATID, ifs_path=ifs_path, catalogue_filepath=catalogue_filepath, spectra_colour='red'):
+    apspecfile_red = os.path.join(ifs_path,str(CATID), str(CATID)+f'_A_spectrum_1-4-arcsec_{spectra_colour}.fits')
     hdulist = fits.open(apspecfile_red)
     sami_flux_red,sami_lam_red = sami_read_apspec(hdulist,0,doareacorr=False)
     hdulist.close()
@@ -66,15 +66,22 @@ def get_spectra_region_flux(sami_lam, sami_flux, region, estimation_method='medi
     return region_flux, region_flux_err
 
 
-def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method='median', sami_flux_red=None, sami_lam_red=None, already_zcorr=False, catalogue_filepath=catalogue_filepath):
+def get_continuum_flux(CATID, regions, em_line = 'H Alpha', spectra_filepath=None, estimation_method='median', sami_flux_red=None, sami_lam_red=None, already_zcorr=False, catalogue_filepath=catalogue_filepath):
     """Get the continuum flux at Halpha for a given CATID.\\
     Two continuum estimation methods implemented: 'median' and 'linefit'.\\
     This function can take in a pre-loaded spectra or relevant CATID.
     
     returns continuum_flux, continuum_flux_err
     """
-    Ha_lam = 6562.819
-
+    if em_line == 'H Alpha':
+        em_line_lam = 6562.819
+        spectra_colour = 'red'
+    elif em_line == 'O III':
+        em_line_lam = 5006.843
+        spectra_colour = 'blue'
+    else:
+        raise NotImplementedError("Only 'H Alpha' and 'O III' emission lines are implemented.")
+    
     # check regions has two arrays of length 2
     assert len(regions) == 2, TypeError("Regions must be an iterable object of two arrays.")
     region1, region2 = regions
@@ -97,7 +104,7 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
     else: # only other possible case is that spectra_filepath is provided
             # read in the spectra
         try:
-            sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, ifs_path=spectra_filepath, catalogue_filepath=catalogue_filepath)
+            sami_flux_red, sami_lam_red_zcorr = get_redshift_corrected_spectra(CATID, ifs_path=spectra_filepath, catalogue_filepath=catalogue_filepath, spectra_colour=spectra_colour)
         except FileNotFoundError:
             print(f"No valid red spectra found for {CATID}")
             return np.nan, np.nan
@@ -118,7 +125,7 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
         continuum_flux_err = continuum_flux * np.sqrt(np.sum( (region_flux_errs/region_fluxes)**2 )) #
 
 
-    elif estimation_method == 'linefit': #linear fit to the two regions, evaluate at Ha_lam to get continuum flux, error from fit errors
+    elif estimation_method == 'linefit': #linear fit to the two regions, evaluate at em_line_lam to get continuum flux, error from fit errors
         # get the relevant points for line fitting
         regions_mask = (sami_lam_red_zcorr >= regions[0][0]) & (sami_lam_red_zcorr <= regions[0][1]) | (sami_lam_red_zcorr >= regions[1][0]) & (sami_lam_red_zcorr <= regions[1][1])
         regions_sami_lam_red_zcorr = sami_lam_red_zcorr[regions_mask]
@@ -127,36 +134,46 @@ def get_continuum_flux(CATID, regions, spectra_filepath=None, estimation_method=
         # fit a line to these points
         res = sp.stats.linregress(regions_sami_lam_red_zcorr, regions_sami_flux_red)
         slope, intercept, slope_err, intercept_err = res.slope, res.intercept, res.stderr, res.intercept_stderr
-        continuum_flux = slope*Ha_lam + intercept
-        continuum_flux_err = np.sqrt( (slope_err*Ha_lam)**2 + intercept_err**2 )
+        continuum_flux = slope*em_line_lam + intercept
+        continuum_flux_err = np.sqrt( (slope_err*em_line_lam)**2 + intercept_err**2 )
     else:
         raise NotImplementedError("Only 'median' and 'linefit' estimation methods are implemented.")
     
+    print(f"CATID {CATID}: Continuum flux at {em_line} ({estimation_method}): {continuum_flux} +/- {continuum_flux_err}")
+
     return continuum_flux, continuum_flux_err
     
 
-def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', 
+def get_EW(CATID, em_line='H Alpha', catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', 
                   SAMI_spectra_table_hdu=None,  sami_flux_red=None, sami_lam_red=None, already_zcorr=False, 
-                  HAlpha_flux=None, HAlpha_error=None):
+                  em_line_flux=None, em_line_error=None):
     """Get the Halpha equivalent width for a given CATID in the 1.4 arcsec aperture.\\
     Two continuum estimation methods implemented: 'median' and 'linefit'.\\
     This function can take in a pre-loaded SAMI_spectra_table (EmissionLine1compDR3.fits) to avoid re-loading the catalogue for each CATID.\\
     This function can also take in a pre-loaded spectra or relevant CATID. to feed into the continuum flux calculation. (see get_continuum_flux function)\\
 
-    returns Ha_EW, Ha_EW_err
+    returns em_line_EW, em_line_EW_err
     """
-    # set the regions for collecting continuum flux, should be symmetric around Halpha
-    region_width = 65
-    region_separation = 140
-    Ha_lam = 6562.819
-    region1 = np.array([-region_width, 0]) + Ha_lam - region_separation/2  
-    region2 = np.array([0, region_width]) + Ha_lam + region_separation/2  
+    # set the regions for collecting continuum flux, should be symmetric around the emission line
+    if em_line == 'H Alpha':
+        region_width = 65
+        region_separation = 140
+        em_line_lam = 6562.819
+    elif em_line == 'O III':
+        region_width = 60
+        region_separation = 140
+        em_line_lam = 5006.843
+    else:
+        raise NotImplementedError("Only 'H Alpha' and 'O III' emission lines are implemented.")
+    
+    region1 = np.array([-region_width, 0]) + em_line_lam - region_separation/2  
+    region2 = np.array([0, region_width]) + em_line_lam + region_separation/2  
 
 
-    # check if HAlpha_flux and HAlpha_error are provided
-    if HAlpha_flux is not None and HAlpha_error is not None:
-        HAlpha_flux = HAlpha_flux
-        HAlpha_error = HAlpha_error
+    # check if em_line_flux and em_line_error are provided
+    if em_line_flux is not None and em_line_error is not None:
+        em_line_flux = em_line_flux
+        em_line_error = em_line_error
 
     else:
         # read in the emission line catalogue if not provided
@@ -167,43 +184,35 @@ def get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_pat
         else:
             SAMI_spectra_table_hdu = SAMI_spectra_table_hdu
 
-        
-        HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
+        em_line_flux, em_line_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], em_line)
         
         # use the first value only and check if there is an actual value
         try:
-            HAlpha_flux = HAlpha_flux[0]
-            HAlpha_error = HAlpha_error[0]
+            em_line_flux = em_line_flux[0]
+            em_line_error = em_line_error[0]
         except IndexError:
-            HAlpha_flux = np.nan
-            HAlpha_error = np.nan
+            em_line_flux = np.nan
+            em_line_error = np.nan
 
     # print(f"Halpha flux: {HAlpha_flux} +/- {HAlpha_error}")
 
     # get the continuum flux
-    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), spectra_filepath=ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
-
+    continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), em_line=em_line, spectra_filepath=ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
     # print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
     # calculate the EW
-    Ha_EW = HAlpha_flux / continuum_flux
-    Ha_EW_err = Ha_EW * np.sqrt((HAlpha_error / HAlpha_flux)**2 + (continuum_flux_err / continuum_flux)**2)
+    em_line_EW = em_line_flux / continuum_flux
+    em_line_EW_err = em_line_EW * np.sqrt((em_line_error / em_line_flux)**2 + (continuum_flux_err / continuum_flux)**2)
 
         
-    return Ha_EW, Ha_EW_err
+    return em_line_EW, em_line_EW_err
 
 
-def get_Halpha_EW_table(CATIDs, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path):
+def get_EW_table(CATIDs, em_line = 'H Alpha', catalogue_filepath=catalogue_filepath, ifs_path=ifs_path):
     """Get the Halpha equivalent width for a given CATID.
     
     Uses the EmissionLine1compDR3.fits catalogue, and individual spectra.
     """
-    # set the regions for collecting continuum flux, should be symmetric around Halpha
-    region_width = 65
-    region_separation = 140
-    Ha_lam = 6562.819
-    region1 = np.array([-region_width, 0]) + Ha_lam - region_separation/2  
-    region2 = np.array([0, region_width]) + Ha_lam + region_separation/2  
-
+    em_line_underscored = em_line.replace(' ', '_')
 
     # read in the emission line catalogue
     SAMI_spectra_catalogue = "EmissionLine1compDR3.fits"
@@ -211,20 +220,20 @@ def get_Halpha_EW_table(CATIDs, catalogue_filepath=catalogue_filepath, ifs_path=
         SAMI_spectra_table_hdu = Table(SAMI_spectra_hdul[1].data)
 
     # initialise HA_EW astropy table
-    Ha_EW_table = Table(names=['CATID', 'HAlpha_EW_MedianFit', 'HAlpha_EW_err_MedianFit', 'HAlpha_EW_LineFit', 'HAlpha_EW_err_LineFit'], dtype=[int, float, float, float, float])
+    em_line_EW_table = Table(names=['CATID', f'{em_line_underscored}_EW_MedianFit', f'{em_line_underscored}_EW_err_MedianFit', f'{em_line_underscored}_EW_LineFit', f'{em_line_underscored}_EW_err_LineFit'], dtype=[int, float, float, float, float])
 
     
     # iterate over CATIDs
     for CATID in CATIDs:
-        HAlpha_flux, HAlpha_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], 'H Alpha')
+        em_line_flux, em_line_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], em_line)
 
-        Ha_EW_medianfit, Ha_EW_medianfit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, HAlpha_flux=HAlpha_flux, HAlpha_error=HAlpha_error)
-        Ha_EW_linefit, Ha_EW_linefit_err = get_Halpha_EW(CATID, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='linefit', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, HAlpha_flux=HAlpha_flux, HAlpha_error=HAlpha_error)
+        em_line_EW_medianfit, em_line_EW_medianfit_err = get_EW(CATID, em_line=em_line, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='median', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, em_line_flux=em_line_flux, em_line_error=em_line_error)
+        em_line_EW_linefit, em_line_EW_linefit_err = get_EW(CATID, em_line=em_line, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='linefit', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, em_line_flux=em_line_flux, em_line_error=em_line_error)
         # add row to table
 
-        Ha_EW_table.add_row([CATID, Ha_EW_medianfit, Ha_EW_medianfit_err, Ha_EW_linefit, Ha_EW_linefit_err])
+        em_line_EW_table.add_row([CATID, em_line_EW_medianfit, em_line_EW_medianfit_err, em_line_EW_linefit, em_line_EW_linefit_err])
         
-    return Ha_EW_table
+    return em_line_EW_table
 
 def read_cube(cubefile):
 
