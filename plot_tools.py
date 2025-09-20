@@ -718,8 +718,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
 
         ax_whan.set(xlim=[-1.5,0.9],ylim=[-1.2,3],xlabel='log([NII]/Ha)',ylabel='log(EW(Ha))')
         # plot WHAN lines:
-        EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False)
-        
+        EW_Ha_tools.plot_WHAN_lines(ax_whan, fontsize=10, region_labels=False, paper='Fernandes (2011) - strong/weak')
+
         
         # add dispersion v n2ha plot
 
@@ -744,7 +744,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         axins_gassign2ha = inset_axes(ax_gassign2ha,width="90%",height="5%",loc='upper center')
         fig1.colorbar(im_gassign2ha, cax=axins_gassign2ha, orientation="horizontal")
 
-        ax_gassign2ha.set(xlim=[-1.5,0.5],ylim=[0,260],xlabel='log([NII]/Ha)',ylabel='Velocity Disperson [km/s]')  
+        ax_gassign2ha.set(xlim=[-1.5,0.5],ylim=[0,np.max([260, np.max(gassig_masked)])], xlabel='log([NII]/Ha)',ylabel='Velocity Disperson [km/s]')  
         
         
 
