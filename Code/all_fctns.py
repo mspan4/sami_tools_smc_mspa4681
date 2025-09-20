@@ -329,7 +329,7 @@ def get_BPT_AGN_classification(BPT_x, BPT_x_error, BPT_y, BPT_y_error, metal = '
     return galaxy_types, is_AGN
 
 
-def get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu, metal):
+def get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu, metal, catid=None):
     """
     Returns the flux column and error table for the metal specified from the given SAMI_spectra_table \\
     valid metals: 'N II', 'S II', 'O I', 'O II', 'O III', 'H Alpha', 'H Beta'
@@ -341,13 +341,29 @@ def get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu, metal):
                             'O III': ('OIII5007_1_4_ARCSECOND',),
                             'H Alpha': ('HALPHA_1_4_ARCSECOND',),
                             'H Beta': ('HBETA_1_4_ARCSECOND',)}
+    
+    if catid is None:
+        metal_flux = np.zeros(len(SAMI_spectra_table_hdu))
+        metal_error = np.zeros(len(SAMI_spectra_table_hdu))
 
-    metal_flux = np.zeros(len(SAMI_spectra_table_hdu))
-    metal_error = np.zeros(len(SAMI_spectra_table_hdu))
+        for metal_colname in SAMI_metal_columns[metal]:
+            metal_flux += SAMI_spectra_table_hdu[metal_colname]
+            metal_error += SAMI_spectra_table_hdu[f'{metal_colname}_ERR']
+    
+    else: # if catid provided, need to only provide for correct row
+        metal_flux = 0
+        metal_error = 0
 
-    for metal_colname in SAMI_metal_columns[metal]:
-        metal_flux += SAMI_spectra_table_hdu[metal_colname]
-        metal_error += SAMI_spectra_table_hdu[f'{metal_colname}_ERR']
+        for metal_colname in SAMI_metal_columns[metal]:
+            metal_flux += SAMI_spectra_table_hdu[metal_colname][SAMI_spectra_table_hdu['CATID'] == catid]
+            metal_error += SAMI_spectra_table_hdu[f'{metal_colname}_ERR'][SAMI_spectra_table_hdu['CATID'] == catid]
+        
+        try:
+            metal_flux = metal_flux[0]
+            metal_error = metal_error[0]
+        except IndexError: # if catid not found, return nans
+            metal_flux = np.nan
+            metal_error = np.nan
 
     return metal_flux, metal_error
 
@@ -589,18 +605,25 @@ def get_all_SAMI_targets_catalogue(catalogue_filepath, save_file = False):
         with fits.open(catalogue_filepath + SAMI_Target_catalogue) as SAMI_Target_hdul:
             SAMI_Target_table_hdu = Table(SAMI_Target_hdul[1].data)
 
-        SAMI_Target_table_hdu.add_column(astropy.table.Column([SAMI_regions[k]]*len(SAMI_Target_table_hdu), name='SAMI_region'))
+        SAMI_Target_table_hdu.add_column(astropy.table.Column([SAMI_regions[k]]*len(SAMI_Target_table_hdu), name='SAMI_REGION'))
 
         SAMI_tables.append(SAMI_Target_table_hdu)
 
     all_SAMI_Targets_table = astropy.table.vstack(SAMI_tables)
+
+    # lets say we only want those with catids that are in the emission line catalogue
+    SAMI_spectra_catalogue = "EmissionLine1compDR3.fits"
+    with fits.open(catalogue_filepath+SAMI_spectra_catalogue) as SAMI_spectra_hdul:
+        SAMI_spectra_table_hdu = Table(SAMI_spectra_hdul[1].data)
+    
+    all_SAMI_Targets_table = all_SAMI_Targets_table[np.isin(all_SAMI_Targets_table['CATID'], SAMI_spectra_table_hdu['CATID'])]
 
 
     if save_file:
         all_SAMI_Targets_table_filename = f"ALL_SAMI_TARGETS.fits"
 
         all_SAMI_Targets_fpath = catalogue_filepath+all_SAMI_Targets_table_filename
-        all_SAMI_Targets_table.write(all_SAMI_Targets_fpath)
+        all_SAMI_Targets_table.write(all_SAMI_Targets_fpath, overwrite=True)
         print(f"Combine SAMI Targets Table Saved to: {all_SAMI_Targets_fpath}")
 
     return all_SAMI_Targets_table
@@ -613,7 +636,7 @@ def get_crossmatched_fits_table(catalogue_filepath,
                                 crossmatching_colnames = ('RA', 'Dec'), 
                                 save_file = False, 
                                 cat_names = ('All_SAMI', 'RACS-mid1_sources'),
-                                only_closest = False,
+                                only_closest = True,
                                 SAMI_cols_to_keep = ('CATID', 'RA_OBJ', 'DEC_OBJ'),
                                 survey_cols_to_keep = 'ALL'):
     """
@@ -667,7 +690,7 @@ def get_crossmatched_fits_table(catalogue_filepath,
         crossmatched_filename = f"{cat_names[0]}_matched_{cat_names[1]}.fits"
 
         crossmatched_filepath = catalogue_filepath+"Crossmatched\\"+crossmatched_filename
-        reduced_crossmatched_table.write(crossmatched_filepath)
+        reduced_crossmatched_table.write(crossmatched_filepath, overwrite=True)
         print(f"Crossmatched Table Saved to: {crossmatched_filepath}")
 
     return reduced_crossmatched_table
@@ -680,28 +703,34 @@ def get_all_SAMI_crossmatched_fits_table(catalogue_filepath,
                                 save_file = False, 
                                 only_closest = True,
                                 SAMI_cols_to_keep = ('CATID', 'RA_OBJ', 'DEC_OBJ'),
-                                survey_cols_to_keep = 'ALL'):
+                                survey_cols_to_keep = 'ALL', 
+                                rerun_all_files = False):
     
     SAMI_Target_catalogues = ("InputCatClustersDR3.fits", "InputCatFiller.fits", "InputCatGAMADR3.fits")
     SAMI_regions = ("Clusters", "Filler", "GAMA")
 
+    if not rerun_all_files:
+        # test if the combined SAMI target catalogue exists
+        try: 
+            with fits.open(catalogue_filepath + "ALL_SAMI_TARGETS.fits") as all_SAMI_targets_hdul:
+                None
+        except FileNotFoundError: # if not, produce one
+            print("All SAMI Targets Catalogue does not already exist.")
+            get_all_SAMI_targets_catalogue(catalogue_filepath)
 
-    # test if the combined SAMI target catalogue exists
-    try: 
-        with fits.open(catalogue_filepath + "ALL_SAMI_TARGETS.fits") as all_SAMI_targets_hdul:
-            None
-    except FileNotFoundError: # if not, produce one
-        print("All SAMI Targets Catalogue does not already exist.")
-        get_all_SAMI_targets_catalogue(catalogue_filepath)
 
+        # test if a cutout of the survey exists
+        try:
+            with fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
+                None
+        except FileNotFoundError: # if not, produce one
+            print("SAMI Target Region Cutout does not already exist.")
+            get_fits_table_SAMI_target_regions_cutout(catalogue_filepath, crossmatching_catalogue, col_names=crossmatching_colnames)
 
-    # test if a cutout of the survey exists
-    try:
-        with fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
-            None
-    except FileNotFoundError: # if not, produce one
-        print("SAMI Target Region Cutout does not already exist.")
-        get_fits_table_SAMI_target_regions_cutout(catalogue_filepath, crossmatching_catalogue, col_names=crossmatching_colnames)
+    else: # if rerun_all_files is True, produce both files
+        print("Rerunning all files to produce new crossmatched catalogue.")
+        get_all_SAMI_targets_catalogue(catalogue_filepath, save_file=True)
+        get_fits_table_SAMI_target_regions_cutout(catalogue_filepath, crossmatching_catalogue, col_names=crossmatching_colnames, save_file=True, overwrite=True)
 
     with fits.open(catalogue_filepath + "ALL_SAMI_TARGETS.fits") as all_SAMI_targets_hdul, fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
         all_SAMI_target_table = Table(all_SAMI_targets_hdul[1].data)
@@ -721,12 +750,102 @@ def get_all_SAMI_crossmatched_fits_table(catalogue_filepath,
         crossmatched_filename = f"all_SAMI_target_matched_{crossmatching_catalogue}"
 
         crossmatched_filepath = catalogue_filepath+"Crossmatched\\"+crossmatched_filename
-        all_SAMI_crossmatched_table.write(crossmatched_filepath)
+        all_SAMI_crossmatched_table.write(crossmatched_filepath, overwrite=True)
         print(f"Crossmatched Table Saved to: {crossmatched_filepath}")
 
 
     return all_SAMI_crossmatched_table
 
+
+
+def get_monte_carlo_separation_plot(catalogue_filepath, crossmatching_catalogue, crossmatching_colnames = ('RA', 'Dec'), max_sep_arcsec = 30, max_shifts = (0.1, 0.1), nbins=30, matching_sep=2, n_trials = 100):
+    # test if a cutout of the survey exists
+    try:
+        with fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
+            None
+    except FileNotFoundError: # if not, produce one
+        print("SAMI Target Region Cutout does not already exist.")
+        get_fits_table_SAMI_target_regions_cutout(catalogue_filepath, crossmatching_catalogue, col_names=crossmatching_colnames)
+
+
+    with fits.open(catalogue_filepath + "ALL_SAMI_TARGETS.fits") as all_SAMI_targets_hdul, fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
+        all_SAMI_target_table = Table(all_SAMI_targets_hdul[1].data)
+        survey_cutout_table_hdu = Table(survey_cutout_hdul[1].data)
+
+    # # only need position cols (might help with run time)
+    # all_SAMI_target_table.keep_columns(('RA_OBJ', 'DEC_OBJ'))
+    # survey_cutout_table_hdu.keep_columns(crossmatching_colnames)
+
+
+    real_matched_table = get_crossmatched_fits_table(catalogue_filepath, 
+                                                    all_SAMI_target_table, 
+                                                    survey_cutout_table_hdu,
+                                                    sep_arcsec = max_sep_arcsec, 
+                                                    crossmatching_colnames=crossmatching_colnames)
+    real_separations = real_matched_table['sep_arcsec']
+
+    # STEP 3: Generate a Monte Carlo (random-shifted) catalog
+    all_random_separations = []
+    num_random_matches = []
+
+    for i in range(n_trials):
+        # create a new table that we can shift
+        shifted_survey_cutout_table = survey_cutout_table_hdu.copy()
+
+        # Randomly shift catalogue RA and DEC with uniform distribution
+        RA_shift = np.random.uniform(-max_shifts[0], max_shifts[0], size=len(shifted_survey_cutout_table))  # degrees
+        Dec_shift = np.random.uniform(-max_shifts[1], max_shifts[1], size=len(shifted_survey_cutout_table))
+
+        shifted_survey_cutout_table[crossmatching_colnames[0]] = ( survey_cutout_table_hdu[crossmatching_colnames[0]]  + RA_shift)%360
+        shifted_survey_cutout_table[crossmatching_colnames[1]] = np.mod((survey_cutout_table_hdu[crossmatching_colnames[1]] + Dec_shift) +90, 180) -90
+        
+        # do crossmatching again with SAMI data
+        rand_matched_table = real_matched_table = get_crossmatched_fits_table(catalogue_filepath, 
+                                                    all_SAMI_target_table, 
+                                                    shifted_survey_cutout_table,
+                                                    sep_arcsec = max_sep_arcsec,
+                                                    crossmatching_colnames=crossmatching_colnames)
+        all_random_separations.append(real_matched_table['sep_arcsec'])
+        num_random_matches.append(np.sum(real_matched_table['sep_arcsec']<=matching_sep))
+
+    # Average histogram seperation plot
+    bins = np.linspace(0, max_sep_arcsec, nbins)
+
+    real_sep_hist, _ = np.histogram(real_separations, bins=bins)
+    rand_sep_hist_avg = np.mean([np.histogram(seps, bins=bins)[0] for seps in all_random_separations], axis=0)
+
+
+    bin_centers = 0.5 * (bins[1:] + bins[:-1])
+
+    plt.plot(bin_centers, real_sep_hist, label="Real matches", color='black')
+    plt.plot(bin_centers, rand_sep_hist_avg, label="Monte Carlo matches", color='red', linestyle='--')
+    plt.xlabel("Separation (arcsec)")
+    plt.ylabel("Number of matches")
+    plt.legend()
+    plt.title(f"Monte-Carlo Cross-matching Comparison for {crossmatching_catalogue[:-5]}")
+    return all_random_separations, real_separations
+
+def get_montecarlo_statistics(all_random_separations, real_separations, matching_sep, intercept_point):
+
+    n_trials = len(all_random_separations)
+    num_random_matches = np.zeros(n_trials)
+    num_random_missed_points = np.zeros(n_trials)
+    for i in range(len(all_random_separations)):
+        num_random_matches[i] = np.sum(all_random_separations[i] <= matching_sep)
+        num_random_missed_points[i] = np.sum((matching_sep<=all_random_separations[i]) & (all_random_separations[i] <= intercept_point))
+
+    mean_num_random_matches = np.mean(num_random_matches)
+    num_true_matches = np.sum(real_separations<=matching_sep)
+    num_real_missed_points = np.sum((matching_sep<=real_separations) & (real_separations <= intercept_point))
+    Reliability = 1-mean_num_random_matches/num_true_matches
+
+    print(f"Genuine Matches: {num_true_matches}")
+    print(f"Mean Random Matches: {mean_num_random_matches}")
+    print(f"Reliability: {Reliability}")
+
+    num_missed_matches = num_real_missed_points - np.mean(num_random_missed_points)
+    print(f"Number of Missed Matches: {num_missed_matches}")
+    print(f"Completeness: {num_true_matches /(num_missed_matches+num_true_matches)}")
 
 
 

@@ -404,7 +404,7 @@ def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', ha
 
             if not haflux_masked.mask[i,j]:
                 # print(np.sum(~np.isnan(flux[:,i,j])))
-                HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_Halpha_EW(catid, ifs_path=ifs_path, estimation_method=estimation_method, 
+                HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_EW(catid, ifs_path=ifs_path, estimation_method=estimation_method, 
                                                                                 sami_flux_red=flux[:,i,j], sami_lam_red=lam, already_zcorr=True,
                                                                                 HAlpha_flux=haflux_masked[i,j], HAlpha_error=haerr[i,j])
             else:
