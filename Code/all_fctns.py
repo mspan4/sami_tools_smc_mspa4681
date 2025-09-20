@@ -73,7 +73,7 @@ def ka03_ke06_Seyfert_LINER_formula(xbpt, metal):
 k06_AGN_formula = lambda xbpt: -1.701*xbpt - 2.163
 k06_Seyfert_LINER_formula = lambda xbpt: 1*xbpt +0.7
 
-def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1], 'S II': [-2, 0.5], 'O I': [-2.5, 0.5]}, plot_ylims = [-2.5,1.5], AGN_cutoffs= True, region_labels=True):
+def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1], 'S II': [-2, 0.5], 'O I': [-2.5, 0.5]}, plot_ylims = [-2.5,1.5], AGN_cutoffs= True, region_labels=True, axis_labels=True):
         # x limits to stop log from changing sign and div by 0
     kewley_xlims = {'N II': 0.47, 'S II': 0.31, 'O I': -0.59} 
     kauffman_xlims = [-1.28, 0.05]
@@ -118,7 +118,9 @@ def plot_BPT_lines(ax, metal, have_legend = True, plot_xlims = {'N II': [-2, 1],
         ax.fill_betweenx([plot_ylims[0], k01_OIII_Hb_AGN_bound], k01_metal_Ha_AGN_bounds[metal], plot_xlims[metal][1], color='grey', alpha=0.2)
 
 
-    ax.set(xlim=plot_xlims[metal], ylim=plot_ylims,xlabel=f'log ([{metal.replace(" ", "")}]/H$\\alpha$)',ylabel='log ([OIII]/H$\\beta$)')
+    ax.set(xlim=plot_xlims[metal], ylim=plot_ylims)
+    if axis_labels:
+        ax.set(xlabel=f'log ([{metal.replace(" ", "")}]/H$\\alpha$)',ylabel='log ([OIII]/H$\\beta$)')
     ax.grid()
 
     if have_legend:
@@ -528,14 +530,24 @@ def get_RA_Dec_cutout_fits_table(table_hdu: Table, bounds: tuple, bound_type = '
 
     return table_hdu_both_removed
 
-def get_fits_table_SAMI_target_regions_cutout(catalogues_filepath, fits_filename, col_names, save_file = True):
+def get_fits_table_SAMI_target_regions_cutout(catalogues_filepath, fits_filename, col_names, save_file = True, overwrite=False):
 
-    GAMA_region_bounds = [((129,-2), (141, 3)), ((174, -3), (186, 2)), ((211.5, -2), (223.5, 3))] # bounds of the GAMA target regions in the SAMI data including filler which are rectangular in shape (bottom left to top right coords) all in degrees
+    GAMA_region_bounds = np.array([((129,-2), (141, 3)), ((174, -3), (186, 2)), ((211.5, -2), (223.5, 3))]) # bounds of the GAMA target regions in the SAMI data including filler which are rectangular in shape (bottom left to top right coords) all in degrees
 
     Cluster_region_bounds = [((355.397880, -29.236351), 2), ((18.815777, 0.213486), 1.5), ((18.739974, 0.430807), 1), 
                             ((356.937810, -28.140661), 3), ((6.380680, -33.046570), 1.5), ((336.977050, -30.575371), 2), 
                             ((329.372605, -7.795692), 2), ((14.067150, -1.255370), 2), ((10.460211, -9.303184), 3)] # bounds of the Cluster target regions (including filler targets) circular in shape  ((x_centre,y_centre), r_approx) all in degrees
 
+
+    # make them wider than necessary so as to not miss possible matches (also good for the monte-carlo stuff as only have stuff going out not in)
+    for bound in range(len(GAMA_region_bounds)):
+        GAMA_region_bounds[bound, 0, :] +=-1
+        GAMA_region_bounds[bound, 1, :] +=1
+
+    new_Cluster_region_bounds = []
+    for bound in range(len(Cluster_region_bounds)):
+        new_Cluster_region_bounds.append((Cluster_region_bounds[bound][0], Cluster_region_bounds[bound][1] +1))
+    Cluster_region_bounds = new_Cluster_region_bounds
 
     with fits.open(catalogues_filepath+fits_filename) as hdul:
         cutout_tables = []
@@ -561,8 +573,8 @@ def get_fits_table_SAMI_target_regions_cutout(catalogues_filepath, fits_filename
     unique_table_hdu_allcutouts = astropy.table.unique(table_hdu_allcutouts) # remove duplicates created from vstacking
 
     if save_file:
-        unique_table_hdu_allcutouts.write(catalogues_filepath+"SAMI_target_region_cutout_"+fits_filename)
         savepath = str(catalogues_filepath+"SAMI_target_regions_cutout_"+fits_filename)
+        unique_table_hdu_allcutouts.write(savepath, overwrite=overwrite)
         print(f"Cutout saved to {savepath}")
 
     return unique_table_hdu_allcutouts
