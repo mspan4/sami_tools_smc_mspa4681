@@ -406,7 +406,7 @@ def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', ha
                 # print(np.sum(~np.isnan(flux[:,i,j])))
                 HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_EW(catid, ifs_path=ifs_path, estimation_method=estimation_method, 
                                                                                 sami_flux_red=flux[:,i,j], sami_lam_red=lam, already_zcorr=True,
-                                                                                HAlpha_flux=haflux_masked[i,j], HAlpha_error=haerr[i,j])
+                                                                                em_line_flux=haflux_masked[i,j], em_line_error=haerr[i,j])
             else:
                 HAlpha_EW_image[i,j] = np.nan
                 HAlpha_EW_err_image[i,j] = np.nan

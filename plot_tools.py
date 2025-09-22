@@ -195,7 +195,7 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     mstar = tab['M_STAR']
     redshift = tab['Z_SPEC']
     bpt_classification = tab['CATEGORY_BPT_AGN']
-    xrayflux = tab['eROSITA_TOTALFLUX_1'] # from eROSITA
+    xrayflux = tab['eRASS1_TOTALFLUX_1'] # from eRASS1
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
     if radio_sources:
         isradio_ls = tab['IS_RADIOSOURCE']==1
