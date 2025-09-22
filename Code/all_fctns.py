@@ -819,7 +819,7 @@ def get_monte_carlo_separation_plot(catalogue_filepath, crossmatching_catalogue,
 
     plt.plot(bin_centers, real_sep_hist, label="Real matches", color='black')
     plt.plot(bin_centers, rand_sep_hist_avg, label="Monte Carlo matches", color='red', linestyle='--')
-    plt.xlabel("Separation (arcsec)")
+    plt.xlabel("Separation [arcsec]")
     plt.ylabel("Number of matches")
     plt.legend()
     plt.title(f"Monte-Carlo Cross-matching Comparison for {crossmatching_catalogue[:-5]}")
