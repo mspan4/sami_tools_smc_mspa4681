@@ -187,23 +187,23 @@ def get_EW(CATID, em_line='H Alpha', catalogue_filepath=catalogue_filepath, ifs_
         em_line_flux, em_line_error = all_fctns.get_flux_and_error_1_4_ARCSEC(SAMI_spectra_table_hdu[SAMI_spectra_table_hdu['CATID'] == CATID], em_line)
         
         # use the first value only and check if there is an actual value
-    try:
-        em_line_flux = em_line_flux[0]
-        em_line_error = em_line_error[0]
-    except IndexError:
-        em_line_flux = np.nan
-        em_line_error = np.nan
+        try:
+            em_line_flux = em_line_flux[0]
+            em_line_error = em_line_error[0]
+        except IndexError:
+            em_line_flux = np.nan
+            em_line_error = np.nan
 
     # print(f"Halpha flux: {HAlpha_flux} +/- {HAlpha_error}")
 
     # get the continuum flux
     continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), em_line=em_line, spectra_filepath=ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
-    # print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
+    print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
     # calculate the EW
     em_line_EW = em_line_flux / continuum_flux
     em_line_EW_err = em_line_EW * np.sqrt((em_line_error / em_line_flux)**2 + (continuum_flux_err / continuum_flux)**2)
     
-    #print(em_line_flux)
+    print(em_line_flux)
         
     return em_line_EW, em_line_EW_err
 
@@ -364,7 +364,7 @@ def plot_WHAN_lines(ax, paper='Fernandes (2011) - Seyfert/LINER', region_labels=
 
 
 
-def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', haflux_masked=None, haerr=None, ha_SN_lim=3, redshift_spec=None, bin='default'):
+def get_Halpha_EW_image(catid, ifs_path=ifs_path, catalogue_filepath=catalogue_filepath, estimation_method='linefit', haflux_masked=None, haerr=None, ha_SN_lim=3, redshift_spec=None, bin='default'):
     """Get the Halpha EW at each spaxel in the cube.
     Can take in a pre-masked Halpha flux array to avoid re-calculating the mask.
     Can take in a specific estimation method (e.g., 'median', 'mean') for the EW calculation.
@@ -403,10 +403,14 @@ def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', ha
                 # continue
 
             if not haflux_masked.mask[i,j]:
-                # print(np.sum(~np.isnan(flux[:,i,j])))
-                HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_EW(catid, ifs_path=ifs_path, estimation_method=estimation_method, 
-                                                                                sami_flux_red=flux[:,i,j], sami_lam_red=lam, already_zcorr=True,
-                                                                                em_line_flux=haflux_masked[i,j], em_line_error=haerr[i,j])
+                HAlpha_EW_image[i,j], HAlpha_EW_err_image[i,j] = get_EW(catid, em_line = 'H Alpha', catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, 
+                                                                        estimation_method=estimation_method, 
+                                                                        sami_flux_red=flux[:,i,j], sami_lam_red=lam, already_zcorr=True,
+                                                                        em_line_flux=haflux_masked[i,j], em_line_error=haerr[i,j])
+                
+                # em_line_EW_linefit, em_line_EW_linefit_err = get_EW(CATID, em_line=em_line, catalogue_filepath=catalogue_filepath, ifs_path=ifs_path, estimation_method='linefit', SAMI_spectra_table_hdu=SAMI_spectra_table_hdu, em_line_flux=em_line_flux, em_line_error=em_line_error)
+
+                # print(f"Spaxel ({i},{j}): EW = {HAlpha_EW_image[i,j]}, EW_err = {HAlpha_EW_err_image[i,j]}")
             else:
                 HAlpha_EW_image[i,j] = np.nan
                 HAlpha_EW_err_image[i,j] = np.nan
@@ -416,6 +420,7 @@ def get_Halpha_EW_image(catid, ifs_path=ifs_path, estimation_method='median', ha
 
             if HAlpha_EW_image[i,j] > 0:
                 counter += 1
+
                 
     # print(f"Counter: {counter}")
 
