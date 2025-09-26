@@ -66,6 +66,8 @@ bpt_agn_labels = (6,7,8,9,10,-1)
 hdulist = fits.open(agn_summary_path)
 tab = hdulist[1].data
 
+#print(tab[tab['CATID'] == 9011900430])
+
 tab_mask = np.isin(tab['CATEGORY_BPT_AGN'], bpt_agn_labels)
 specific_catids = tab['CATID'][tab_mask]
         
@@ -81,6 +83,8 @@ OPAL_USER=OPAL_USER,
 do_printstatement=True, 
 save_folder=None, 
 advanced=True)
+
+
 
 """
 catids = tab['CATID'][tab['CATEGORY_BPT_AGN'] == 6]

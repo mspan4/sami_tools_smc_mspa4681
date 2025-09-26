@@ -158,19 +158,11 @@ def plot_sov_many(catfile,bin='default'):
 
 ###############################################################
 
-def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=True, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False):
+def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf', bin='default', radio_sources=False, only_radio=False, snlim=3.0, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False, redo_cutout=False):
     """
     Plot many SOV plots, reading list from the Matched AGN FITS file
     """
 
-
-    # get casda credentials if needed (only if isradio)
-    if radio_sources:
-        casda=Casda()
-        casda.login(username=OPAL_USER, store_password=False)
-    else:
-        casda=None
-        
         
     hdulist = fits.open(catfile)
     
@@ -179,6 +171,16 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
 
     if only_radio:
         tab = tab[tab['IS_RADIOSOURCE']==1]
+        radio_sources = True
+        
+            # get casda credentials if needed (only if isradio)
+            
+    if radio_sources:
+        casda=Casda()
+        casda.login(username=OPAL_USER, store_password=False)
+    else:
+        casda=None
+        
         
     if type(specific_catids) != str:
         tab = tab[np.isin(tab['CATID'], specific_catids)] # redefine tab to only include specific_catids
@@ -197,15 +199,13 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
     bpt_classification = tab['CATEGORY_BPT_AGN']
     xrayflux = tab['eRASS1_TOTALFLUX_1'] # from eRASS1
     radioflux = tab['RACS_TOTALFLUX'] *1e-3 * 1e-23 *u.erg/u.s * u.cm**(-2) /u.Hz # in mJy, now in erg/s /cm^2 /Hz
-    if radio_sources:
-        isradio_ls = tab['IS_RADIOSOURCE']==1
+    isradio_ls = tab['IS_RADIOSOURCE']
     
-    else:
-        isradio_ls = np.zeros(len(tab['IS_RADIOSOURCE']))
 
     
     if advanced:
         save_name = save_name[:-4] +"_advanced.pdf"
+    
 
 
     # set up pdf plotting:
@@ -237,7 +237,9 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
             
                     #define label:
             label = 'log(M*) = {0:5.2f}, z = {1:5.3f}, L(1367.5 MHz)={2:6.2e} erg/s /Hz, BPT classification: {3}'.format(mstar[n],redshift[n],lum.decompose(), bpt_classification[n])
-
+            
+        else: # if not radio_sources
+            isradio_ls[n] = 0
 
 
        
@@ -248,10 +250,11 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
         if (catid == 203609):
             usebin = 'default'
             
-
+        
+        print(tab['IS_RACSSOURCE'][n])
             
         plot_dr3_sov(catid,bin=usebin,dopdf=False,label=label, casda=casda, isradio=isradio_ls[n], redshift=redshift[n], do_printstatement=do_printstatement,
-        advanced=advanced)
+        advanced=advanced, redo_cutout=redo_cutout)
 
         py.draw()
         # pause for input if plotting all the spectra:
@@ -268,13 +271,14 @@ def plot_sov_many_new(catfile, specific_catids= 'All', save_name = 'sov_many.pdf
 
 ###############################################################
 
-def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None, redshift=None, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False):
+def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=False, casda = None, redshift=None, OPAL_USER=OPAL_USER, do_printstatement=False, save_folder=None, advanced=False, redo_cutout=False):
 
     """Make a summary plot of all the main data from DR3, much like a single
     object viewer.  Assumes the format of DR3."""
     
     # get casda credentials if needed (only if isradio)
     if isradio and casda==None:
+        print(2)
         casda=Casda()
         casda.login(username=OPAL_USER, store_password=False)
 
@@ -498,7 +502,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         impix = large_image_scale * 50
         imsize = large_image_scale * 0.4166*u.arcmin
         
-        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda, redo_cutout=redo_cutout)
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax_image_large.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
@@ -508,7 +512,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         impix = medium_image_scale * 50
         imsize = medium_image_scale * 0.4166*u.arcmin
         
-        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda, redo_cutout=redo_cutout)
         image = fits.open(cutout_file)[0].data.squeeze()
         
         ax_image.contour(np.flipud(image), colors='white', linewidths=0.5, alpha=0.25, extent=(0,impix, 0, impix))
@@ -518,7 +522,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         impix = 65
         #imsize = 0.25*u.arcmin
         imsize = 0.4166*u.arcmin
-        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda)
+        cutout_file = get_racs_image_cutout(ra, dec, imsize, casda=casda, redo_cutout=redo_cutout)
 
         image = fits.open(cutout_file)[0].data.squeeze()
         
@@ -674,7 +678,7 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         ax_ha_ew.set_aspect('equal', 'box')
 
         ha_ew, ha_ew_err= EW_tools.get_Halpha_EW_image(catid, estimation_method='median', bin=bin, haflux_masked=haflux_masked, haerr=haerr) # haflux_masked=haflux_masked, haerr=haerr, redshift=redshift
-
+        #print(np.sum(~np.isnan(ha_ew)))
         ha_ewsn = ha_ew / ha_ew_err
         ha_ew_snflag = np.where((ha_ewsn > snlim),0,1)
         ha_ew_masked = np.ma.masked_array(ha_ew,(ha_ew_snflag>0))
@@ -744,7 +748,8 @@ def plot_dr3_sov(catid,bin='default',dopdf=True,snlim=3.0,label=None, isradio=Fa
         axins_gassign2ha = inset_axes(ax_gassign2ha,width="90%",height="5%",loc='upper center')
         fig1.colorbar(im_gassign2ha, cax=axins_gassign2ha, orientation="horizontal")
 
-        ax_gassign2ha.set(xlim=[-1.5,0.5],ylim=[0,np.max([260, np.max(gassig_masked)])], xlabel='log([NII]/Ha)',ylabel='Velocity Disperson [km/s]')  
+        print([260, np.nanmax(gassig_masked.filled(np.nan))])
+        ax_gassign2ha.set(xlim=[-1.5,0.5],ylim=[0,np.nanmax([260, np.nanmax(gassig_masked.filled(np.nan))])], xlabel='log([NII]/Ha)',ylabel='Velocity Disperson [km/s]')  
         
         
 

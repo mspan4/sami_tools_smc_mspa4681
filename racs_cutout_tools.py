@@ -19,7 +19,7 @@ OPAL_USER = "mspa4681@uni.sydney.edu.au"
 def get_racs_image_cutout(ra, dec, imsize, casda=None, save_dir="racs_cutouts", redo_cutout=False, print_statements = True):
     """Saves a cutout of RACS-DR1 images at the given coordinate, with the given size. Returns path at which cutout is located."""
 
-    save_str = f"RACS_DR1_cutout_{ra}_{dec}_{imsize}.fits"
+    save_str = f"RACS-MID1_cutout_{ra}_{dec}_{imsize}.fits"
     save_path = os.path.join(save_dir, save_str)
 
 
@@ -41,12 +41,7 @@ def get_racs_image_cutout(ra, dec, imsize, casda=None, save_dir="racs_cutouts", 
     centre = SkyCoord(ra, dec, unit=(u.deg, u.deg))
 
     # if not, get the image cutout
-    query = f"""
-        SELECT * FROM ivoa.obscore
-        WHERE filename LIKE 'RACS-DR1%'
-          AND filename LIKE '%A.fits'
-          AND 1 = CONTAINS(POINT('ICRS', {ra}, {dec}), s_region)
-    """
+    query = "select * from ivoa.obscore where filename LIKE 'RACS-MID1________.fits' AND 1 = CONTAINS(POINT('ICRS',"+ str(ra) + ","+ str(dec) + "),s_region)"
     # open connection to TAP service and run query
     casdatap = TapPlus(url="https://casda.csiro.au/casda_vo_tools/tap")
     job = casdatap.launch_job_async(query)

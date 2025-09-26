@@ -198,12 +198,12 @@ def get_EW(CATID, em_line='H Alpha', catalogue_filepath=catalogue_filepath, ifs_
 
     # get the continuum flux
     continuum_flux, continuum_flux_err = get_continuum_flux(CATID, (region1, region2), em_line=em_line, spectra_filepath=ifs_path, estimation_method=estimation_method, sami_flux_red=sami_flux_red, sami_lam_red=sami_lam_red, already_zcorr=already_zcorr, catalogue_filepath=catalogue_filepath)
-    print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
+    #print(f"Continuum flux at Halpha: {continuum_flux} +/- {continuum_flux_err}")
     # calculate the EW
     em_line_EW = em_line_flux / continuum_flux
     em_line_EW_err = em_line_EW * np.sqrt((em_line_error / em_line_flux)**2 + (continuum_flux_err / continuum_flux)**2)
     
-    print(em_line_flux)
+    #print(em_line_flux)
         
     return em_line_EW, em_line_EW_err
 
