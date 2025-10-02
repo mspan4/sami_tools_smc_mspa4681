@@ -94,7 +94,7 @@ def get_centroid(flux, averaging_radius=5, array_dim = 3):
 
 
 
-def apply_nan_circle_mask(array, radius, center, array_dim=3):
+def apply_nan_circle_mask(array, radius, center, array_dim=3, inverse=False):
     """
     Sets values outside a circular region to NaN. Assumes array shape is (λ, x, y).
     
@@ -128,6 +128,9 @@ def apply_nan_circle_mask(array, radius, center, array_dim=3):
         mask = np.broadcast_to(mask2d, array.shape)
     else:
         mask = mask2d
+
+    if inverse:
+        mask = ~mask
     
     # since the given array is normally a masked array
     #masked_array = np.ma.where(mask, array, np.nan)
