@@ -37,7 +37,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
     Create a table containing velocity dispersion statistics for each given CATID.
     """
     # setup table
-    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM', '5SPAXEL_MEDIAN_VEL_DISP', '5SPAXEL_VEL_DISP_SEM'], dtype=[int, float, float, float, float])
+    vel_statistics_table = Table(names=['CATID', 'MEDIAN_VEL_DISP', 'VEL_DISP_SEM', '5SPAXEL_MEDIAN_VEL_DISP', '5SPAXEL_VEL_DISP_SEM', 'OUTSIDE_5SPAXEL_VEL_DISP', 'OUTSIDE_5SPAXEL_VEL_DISP_SEM'], dtype=[int, float, float, float, float, float, float])
     
     if cube_plots:
         pdf = PdfPages(f"test_plots/gassig_cube_testing")
@@ -82,7 +82,7 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
         if cube_plots:
             fig1 = py.figure(1,constrained_layout=True)
             fig1.clf()
-            axs = fig1.subplots(1,3)
+            axs = fig1.subplots(1,4)
             axs = axs.flatten()
 
             axs[0].imshow(gassig_masked, origin='lower')
@@ -106,11 +106,13 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
             axs[0].plot(centroid_position[1], centroid_position[0], '.')
             axs[2].plot(centroid_position[1], centroid_position[0], '.')
 
-        # get the median velocity dispersion within 5 spaxels of the centroid
+        # get the median velocity dispersion within 5 spaxels of the centroid and that outside 5 spaxels
         if centroid_position is not None:            
             reduced_5spaxel_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2)
+            reduced_outisde_5spaxel_gassig_masked = cube_fctns.apply_nan_circle_mask(gassig_masked, 5, centroid_position, array_dim = 2, inverse=True)
             
             reduced_5spaxel_gassig_masked_num_spaxels = np.sum(np.isfinite(reduced_5spaxel_gassig_masked))
+            reduced_outisde_5spaxel_gassig_masked_num_spaxels = np.sum(np.isfinite(reduced_outisde_5spaxel_gassig_masked))
 
             
             if reduced_5spaxel_gassig_masked_num_spaxels > min_spaxel_count:
@@ -122,16 +124,30 @@ def get_gassig_statistics_table(catids=all_CATIDs, save_filepath=os.path.join('s
                 sem_5spaxel_vel_disp = np.nan
 
 
+            if reduced_outisde_5spaxel_gassig_masked_num_spaxels > min_spaxel_count:
+                median_outisde_5spaxel_vel_disp = np.ma.median(reduced_outisde_5spaxel_gassig_masked)
+                sem_outisde_5spaxel_vel_disp = stats.sem(reduced_outisde_5spaxel_gassig_masked, axis=None, nan_policy='omit')
+            
+            else:
+                median_outisde_5spaxel_vel_disp = np.nan
+                sem_outisde_5spaxel_vel_disp = np.nan
+
+
             if cube_plots:
                 axs[2].imshow(reduced_5spaxel_gassig_masked, origin='lower')
                 axs[2].set_title(f'5spaxel_gassig - {reduced_5spaxel_gassig_masked_num_spaxels}')
 
+                axs[3].imshow(reduced_outisde_5spaxel_gassig_masked, origin='lower')
+                axs[3].set_title(f'outside5spaxel_gassig - {reduced_outisde_5spaxel_gassig_masked_num_spaxels}')
+
         else:
             median_5spaxel_vel_disp = np.nan
             sem_5spaxel_vel_disp = np.nan
+            median_outisde_5spaxel_vel_disp = np.nan
+            sem_outisde_5spaxel_vel_disp = np.nan
 
         # add to table
-        vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5spaxel_vel_disp, sem_5spaxel_vel_disp])
+        vel_statistics_table.add_row([catid, median_vel_disp, vel_disp_sem, median_5spaxel_vel_disp, sem_5spaxel_vel_disp, median_outisde_5spaxel_vel_disp, sem_outisde_5spaxel_vel_disp])
         
         if cube_plots:
             py.draw()
