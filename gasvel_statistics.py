@@ -26,7 +26,7 @@ import cube_fctns
 ifs_path = "/import/hortus1/sami/dr3_ingestion_v8/data/sami/dr3/ifs"
 
 # Location of SAMI AGN Summary Catalogue
-AGN_Summary_path = "SAMI_AGN_matches.fits"
+AGN_Summary_path = "shared_catalogues/SAMI_AGN_matches.fits"
 
 AGN_Summary_table = fits.open(AGN_Summary_path)[1].data
 all_CATIDs = AGN_Summary_table['CATID']

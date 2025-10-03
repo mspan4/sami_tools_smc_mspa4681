@@ -68,16 +68,16 @@ tab = hdulist[1].data
 
 #print(tab[tab['CATID'] == 9011900430])
 
-tab_mask = np.isin(tab['CATEGORY_BPT_AGN'], bpt_agn_labels)
+tab_mask = np.isin(tab['CATEGORY_BPT_AGN'], (6,))
 specific_catids = tab['CATID'][tab_mask]
         
 
 plot_tools.plot_sov_many_new(agn_summary_path, 
 specific_catids= specific_catids, 
-save_name = 'many_sov_radio_AGNs.pdf', 
+save_name = 'many_sov_LINERs.pdf', 
 bin='default', 
 radio_sources=True, 
-only_radio=True, 
+only_radio=False, 
 snlim=3.0, 
 OPAL_USER=OPAL_USER, 
 do_printstatement=True, 
