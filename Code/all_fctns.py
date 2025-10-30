@@ -758,7 +758,7 @@ def get_all_SAMI_crossmatched_fits_table(catalogue_filepath,
 
 
 
-def get_monte_carlo_separation_plot(catalogue_filepath, crossmatching_catalogue, crossmatching_colnames = ('RA', 'Dec'), max_sep_arcsec = 30, max_shifts = (0.1, 0.1), nbins=30, matching_sep=2, n_trials = 100):
+def get_monte_carlo_separation_plot(catalogue_filepath, crossmatching_catalogue, crossmatching_colnames = ('RA', 'Dec'), max_sep_arcsec = 30, max_shifts = (0.1, 0.1), nbins=30, matching_sep=2, n_trials = 100, plotting=True):
     # test if a cutout of the survey exists
     try:
         with fits.open(catalogue_filepath + "SAMI_target_region_cutout_" + crossmatching_catalogue) as survey_cutout_hdul:
@@ -808,21 +808,22 @@ def get_monte_carlo_separation_plot(catalogue_filepath, crossmatching_catalogue,
         all_random_separations.append(real_matched_table['sep_arcsec'])
         num_random_matches.append(np.sum(real_matched_table['sep_arcsec']<=matching_sep))
 
-    # Average histogram seperation plot
-    bins = np.linspace(0, max_sep_arcsec, nbins)
+    if plotting:
+        # Average histogram seperation plot
+        bins = np.linspace(0, max_sep_arcsec, nbins)
 
-    real_sep_hist, _ = np.histogram(real_separations, bins=bins)
-    rand_sep_hist_avg = np.mean([np.histogram(seps, bins=bins)[0] for seps in all_random_separations], axis=0)
+        real_sep_hist, _ = np.histogram(real_separations, bins=bins)
+        rand_sep_hist_avg = np.mean([np.histogram(seps, bins=bins)[0] for seps in all_random_separations], axis=0)
 
 
-    bin_centers = 0.5 * (bins[1:] + bins[:-1])
+        bin_centers = 0.5 * (bins[1:] + bins[:-1])
 
-    plt.plot(bin_centers, real_sep_hist, label="Real matches", color='black')
-    plt.plot(bin_centers, rand_sep_hist_avg, label="Monte Carlo matches", color='red', linestyle='--')
-    plt.xlabel("Separation [arcsec]")
-    plt.ylabel("Number of matches")
-    plt.legend()
-    plt.title(f"Monte-Carlo Cross-matching Comparison for {crossmatching_catalogue[:-5]}")
+        plt.plot(bin_centers, real_sep_hist, label="Real matches", color='black')
+        plt.plot(bin_centers, rand_sep_hist_avg, label="Monte Carlo matches", color='red', linestyle='--')
+        plt.xlabel("Separation [arcsec]")
+        plt.ylabel("Number of matches")
+        plt.legend()
+        plt.title(f"Monte-Carlo Cross-matching Comparison for {crossmatching_catalogue[:-5]}")
     return all_random_separations, real_separations
 
 def get_montecarlo_statistics(all_random_separations, real_separations, matching_sep, intercept_point):

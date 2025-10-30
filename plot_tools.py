@@ -50,7 +50,7 @@ spectra_features_dict = {'$H\\alpha$': 6564.61, '$H\\beta$':4862.68, '$NII$': 65
 
 
 ###############################################################
-def plot_line_lam(ax,z, annotations=True):
+def plot_line_lam(ax,z, annotations=True, alpha=1):
 
     """Plot location of main emission and abs lines at redshift
     of current object. (http://astronomy.nmsu.edu/drewski/tableofemissionlines.html)"""
@@ -63,13 +63,13 @@ def plot_line_lam(ax,z, annotations=True):
     #z=0
     # Ha
     Ha_lam = (1+z) * 6562.819
-    ax.axvline(Ha_lam, color='grey', zorder=-1)
+    ax.axvline(Ha_lam, color='grey', zorder=-1, alpha=alpha)
     if annotations:
         ax.text(Ha_lam-90, h*yrange+ymin, '$H\\alpha$')
     
     # Hb
     Hb_lam = (1+z) * 4861.333
-    ax.axvline(Hb_lam, color='grey', zorder=-1)
+    ax.axvline(Hb_lam, color='grey', zorder=-1, alpha=alpha)
     if annotations:
         ax.text(Hb_lam-90, h*yrange+ymin, '$H\\beta$')
     
@@ -79,25 +79,25 @@ def plot_line_lam(ax,z, annotations=True):
     #ax.text(NII_lam1-90, h*yrange+ymin, '$NII$')
     
     NII_lam2 = (1+z) * 6583.50
-    ax.axvline(NII_lam2, color='grey', zorder=-1)
+    ax.axvline(NII_lam2, color='grey', zorder=-1, alpha=alpha)
     if annotations:
         ax.text(NII_lam2+10, h*yrange+ymin, '$NII$')
     
     
     # OIII
     OIII_lam = (1+z) * 5006.843
-    ax.axvline(OIII_lam, color='grey', zorder=-1)
+    ax.axvline(OIII_lam, color='grey', zorder=-1, alpha=alpha)
     if annotations:
         ax.text(OIII_lam+10, h*yrange+ymin, '$OIII$')
     
     # SII
     SII_lam1 = (1+z) * 6716.29
-    ax.axvline(SII_lam1, color='grey', zorder=-1)
+    ax.axvline(SII_lam1, color='grey', zorder=-1, alpha=alpha)
     if annotations:
         ax.text(SII_lam1+10, h*yrange+ymin, '$SII$')
     
     SII_lam2 = (1+z) * 6730.810
-    ax.axvline(SII_lam2, color='grey', zorder=-1)
+    ax.axvline(SII_lam2, color='grey', zorder=-1, alpha=alpha)
     #ax.text(SII_lam2+10, h*yrange+ymin, '$SII$')
 
     

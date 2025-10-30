@@ -349,7 +349,7 @@ def plot_WHAN_lines(ax, paper='Fernandes (2011) - Seyfert/LINER', region_labels=
         ax.plot([xrange[0], xrange[1]], [np.log10(3)]*2, 'k--') # weak/radio line
         ax.plot([-0.4, xrange[1]], [np.log10(6)]*2, color='k') # K06 Seyfert/LINER line - weak/strong line
 
-        ax.plot([-0.4]*2, [0.5, yrange[1]], 'k--') # S06 SF/AGN line
+        ax.plot([-0.4]*2, [np.log10(3), yrange[1]], 'k--') # S06 SF/AGN line
 
 
         if region_labels:
